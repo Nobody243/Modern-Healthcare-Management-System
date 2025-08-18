@@ -1,0 +1,151 @@
+'use client';
+
+import React, { Suspense, lazy, useState, useCallback, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
+
+interface SplineSceneProps {
+  scene: string;
+  className?: string;
+}
+
+export function SplineScene({ scene, className }: SplineSceneProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const splineAppRef = useRef<any>(null);
+  const rafRef = useRef<number | null>(null);
+
+  // Smooth mouse coordinates for 3D container tilt parallax
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const handleLoad = useCallback((splineApp: any) => {
+    splineAppRef.current = splineApp;
+    // Slight frame delay to ensure WebGL textures are uploaded before fading in
+    requestAnimationFrame(() => {
+      setIsLoaded(true);
+    });
+
+    try {
+      if (splineApp._renderer) {
+        splineApp._renderer.powerPreference = 'high-performance';
+        splineApp._renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      }
+    } catch {
+      // Ignore private renderer access
+    }
+  }, []);
+
+  // Global window pointer tracking with requestAnimationFrame throttling
+  useEffect(() => {
+    let pendingEvent: MouseEvent | null = null;
+
+    const processPointer = () => {
+      if (!pendingEvent || !containerRef.current) {
+        rafRef.current = null;
+        return;
+      }
+
+      const e = pendingEvent;
+      pendingEvent = null;
+
+      // Calculate normalized viewport offset [-1, 1] for smooth interactive tilt
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
+      setMousePos({ x: normX, y: normY });
+
+      // Forward event to Spline canvas if mouse is outside canvas bounds
+      const canvas = containerRef.current.querySelector('canvas');
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const isDirectlyOver =
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom;
+
+        if (!isDirectlyOver) {
+          const syntheticPointer = new PointerEvent('pointermove', {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            screenX: e.screenX,
+            screenY: e.screenY,
+            bubbles: false, // Prevent bubbling to window to avoid duplicate triggers
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+          });
+          canvas.dispatchEvent(syntheticPointer);
+        }
+      }
+
+      rafRef.current = null;
+    };
+
+    const handlePointerMove = (e: MouseEvent) => {
+      pendingEvent = e;
+      if (rafRef.current === null) {
+        rafRef.current = requestAnimationFrame(processPointer);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      animate={{
+        rotateY: mousePos.x * 6,
+        rotateX: -mousePos.y * 6,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 120,
+        damping: 20,
+        mass: 0.5,
+      }}
+      style={{ transformStyle: 'preserve-3d', perspective: 1200 }}
+      className="relative w-full h-full flex items-center justify-center overflow-visible select-none isolate"
+    >
+      {/* Loading Skeleton */}
+      {!isLoaded && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3.5 z-0 select-none pointer-events-none">
+          <div className="relative w-14 h-14 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+            <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] animate-pulse" />
+          </div>
+          <p className="text-xs font-mono font-medium text-cyan-300/80 tracking-widest uppercase">
+            Rendering 3D Interface...
+          </p>
+        </div>
+      )}
+
+      {/* Spline Canvas */}
+      <div
+        className={`w-full h-full transition-all duration-700 ease-out transform-gpu ${
+          isLoaded
+            ? 'opacity-100 scale-100 blur-0'
+            : 'opacity-0 scale-95 blur-sm pointer-events-none'
+        }`}
+      >
+        <Suspense fallback={null}>
+          <Spline
+            scene={scene}
+            className={`${className || ''} w-full h-full [touch-action:pan-y]`}
+            onLoad={handleLoad}
+          />
+        </Suspense>
+      </div>
+    </motion.div>
+  );
+}
+

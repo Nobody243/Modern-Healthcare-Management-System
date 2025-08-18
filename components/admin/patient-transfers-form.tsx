@@ -1,0 +1,235 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { X, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Combobox } from '@/components/ui/combobox';
+
+interface PatientTransfer {
+  PT_ID: number;
+  PT_PAT_NUMBER: string;
+  PT_PAT_NAME: string;
+  PT_FROM_WARD: string;
+  PT_TO_WARD: string;
+  PT_REASON: string;
+  PT_TRANSFER_DATE: string;
+  PT_AUTHORIZED_BY: string;
+  PT_STATUS: string;
+}
+
+interface Props {
+  transfer: PatientTransfer | null;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export default function PatientTransfersForm({ transfer, onClose, onSuccess }: Props) {
+  const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState<Array<{ PAT_NUMBER: string; PAT_FNAME: string; PAT_LNAME: string }>>([]);
+  const [formData, setFormData] = useState({
+    from_ward: transfer?.PT_FROM_WARD || '',
+    to_ward: transfer?.PT_TO_WARD || '',
+    reason: transfer?.PT_REASON || '',
+    patientName: transfer?.PT_PAT_NAME || '',
+    patientNumber: transfer?.PT_PAT_NUMBER || '',
+    authorized_by: transfer?.PT_AUTHORIZED_BY || '',
+    status: transfer?.PT_STATUS || 'Pending',
+  });
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch('/api/patients');
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
+  const handlePatientChange = (patNumber: string) => {
+    const patient = patients.find(p => p.PAT_NUMBER === patNumber);
+    if (patient) {
+      setFormData({
+        ...formData,
+        patientNumber: patient.PAT_NUMBER,
+        patientName: `${patient.PAT_FNAME} ${patient.PAT_LNAME}`,
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const endpoint = '/api/patient-transfers';
+      const method = transfer ? 'PUT' : 'POST';
+      
+      const body = transfer
+        ? { id: transfer.PT_ID, ...formData }
+        : formData;
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) throw new Error('Failed to save transfer');
+
+      toast.success(transfer ? 'Transfer updated successfully' : 'Transfer created successfully');
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving transfer:', error);
+      toast.error('Failed to save transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      key={transfer?.PT_ID || 'new'}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {transfer ? 'Edit Transfer' : 'Add Transfer'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Patient *
+            </label>
+            <Combobox
+              options={patients.map((patient) => ({
+                value: patient.PAT_NUMBER,
+                label: `${patient.PAT_FNAME} ${patient.PAT_LNAME} (${patient.PAT_NUMBER})`
+              }))}
+              value={formData.patientNumber}
+              onChange={handlePatientChange}
+              placeholder="Select patient"
+              searchPlaceholder="Search patients..."
+              emptyMessage="No patient found."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              From Ward *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.from_ward}
+              onChange={(e) => setFormData({ ...formData, from_ward: e.target.value })}
+              className="input-hospital"
+              placeholder="Enter current ward"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              To Ward *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.to_ward}
+              onChange={(e) => setFormData({ ...formData, to_ward: e.target.value })}
+              className="input-hospital"
+              placeholder="Enter destination ward"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Reason
+            </label>
+            <textarea
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="input-hospital"
+              rows={3}
+              placeholder="Enter reason for transfer"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Authorized By
+            </label>
+            <input
+              type="text"
+              value={formData.authorized_by}
+              onChange={(e) => setFormData({ ...formData, authorized_by: e.target.value })}
+              className="input-hospital"
+              placeholder="Enter authorizing person's name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Status *
+            </label>
+            <select
+              required
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="select-hospital"
+            >
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary flex items-center gap-2"
+              disabled={loading}
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {transfer ? 'Update' : 'Create'} Transfer
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}

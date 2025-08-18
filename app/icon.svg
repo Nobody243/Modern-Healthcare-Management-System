@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Modern Tech Medical Gradient -->
+    <linearGradient id="hms-grad" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0284C7" />  <!-- Cyan/Sky Blue -->
+      <stop offset="100%" stop-color="#0F172A" /> <!-- Deep Slate/Navy -->
+    </linearGradient>
+
+    <!-- Pulse Line Gradient -->
+    <linearGradient id="pulse-grad" x1="96" y1="256" x2="416" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#2DD4BF" /> <!-- Cyan to Teal -->
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow -->
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0284C7" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Container Base (Squircle) -->
+  <rect width="512" height="512" rx="112" fill="url(#hms-grad)" />
+
+  <!-- Clean Medical Cross Graphic with Integrated Pulse -->
+  <g filter="url(#glow)">
+    <!-- Vertical Medical Pillar -->
+    <rect x="220" y="96" width="72" height="320" rx="36" fill="#FFFFFF" fill-opacity="0.12" />
+
+    <!-- Horizontal Medical Pillar -->
+    <rect x="96" y="220" width="320" height="72" rx="36" fill="#FFFFFF" fill-opacity="0.12" />
+
+    <!-- Foreground Stylized Medical Cross Core -->
+    <path
+      d="M208 128C208 119.163 215.163 112 224 112H288C296.837 112 304 119.163 304 128V208H384C392.837 208 400 215.163 400 224V288C400 296.837 392.837 304 384 304H304V384C304 392.837 296.837 400 288 400H224C215.163 400 208 392.837 208 384V304H128C119.163 304 112 296.837 112 288V224C112 215.163 119.163 208 128 208H208V128Z"
+      fill="#FFFFFF"
+      fill-opacity="0.95"
+    />
+
+    <!-- Active Vital / ECG Pulse Overlay across center -->
+    <path
+      d="M136 256H204L228 196L256 324L284 220L308 256H376"
+      stroke="url(#pulse-grad)"
+      stroke-width="26"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>
