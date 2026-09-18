@@ -22,10 +22,34 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Check required Oracle secrets
+        id: oracle-secrets
+        env:
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+          ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+          ORACLE_WALLET_BASE64: ${{ secrets.ORACLE_WALLET_BASE64 }}
+          ORACLE_TNS_NAME: ${{ secrets.ORACLE_TNS_NAME }}
+        run: |
+          missing=()
+          for var in ORACLE_USER ORACLE_PASSWORD ORACLE_WALLET_BASE64 ORACLE_TNS_NAME; do
+            if [ -z "${!var}" ]; then
+              missing+=("$var")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "has_required_secrets=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping keep-alive ping due to missing secrets: ${missing[*]}"
+          else
+            echo "has_required_secrets=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install python-oracledb
+        if: steps.oracle-secrets.outputs.has_required_secrets == 'true'
         run: pip install oracledb
 
       - name: Run keep-alive ping
+        if: steps.oracle-secrets.outputs.has_required_secrets == 'true'
         env:
           ORACLE_USER: ${{ secrets.ORACLE_USER }}
           ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
@@ -33,3 +57,7 @@ jobs:
           ORACLE_WALLET_PASSWORD: ${{ secrets.ORACLE_WALLET_PASSWORD }}
           ORACLE_TNS_NAME: ${{ secrets.ORACLE_TNS_NAME }}
         run: python keep_alive.py
+
+      - name: Keep-alive skipped
+        if: steps.oracle-secrets.outputs.has_required_secrets != 'true'
+        run: echo "Keep-alive query skipped because required Oracle secrets are not configured."
