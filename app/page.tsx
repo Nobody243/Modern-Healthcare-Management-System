@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValue, useSpring } from 'framer-motion';
 import Link from 'next/link';
 import {
   Stethoscope,
@@ -28,6 +28,52 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SplineScene } from '@/components/ui/spline';
+
+// ============================================================================
+// ZERO-RERENDER DYNAMIC CURSOR GLOW (GPU HARDWARE ACCELERATED)
+// ============================================================================
+function CursorGlow() {
+  const cursorX = useMotionValue(-500);
+  const cursorY = useMotionValue(-500);
+  const opacity = useMotionValue(0);
+
+  const springConfig = { damping: 28, stiffness: 350, mass: 0.1 };
+  const smoothX = useSpring(cursorX, springConfig);
+  const smoothY = useSpring(cursorY, springConfig);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+      opacity.set(1);
+    };
+
+    const handleMouseLeave = () => {
+      opacity.set(0);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [cursorX, cursorY, opacity]);
+
+  return (
+    <motion.div
+      style={{
+        x: smoothX,
+        y: smoothY,
+        translateX: '-50%',
+        translateY: '-50%',
+        opacity,
+      }}
+      className="pointer-events-none fixed top-0 left-0 z-30 w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.12)_0%,rgba(59,130,246,0.04)_45%,transparent_70%)] blur-2xl transform-gpu will-change-transform"
+    />
+  );
+}
 
 // ============================================================================
 // ZERO-RERENDER SPOTLIGHT CARD (CSS VARIABLE COMPOSITOR ACCELERATION)
@@ -207,6 +253,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden">
+      {/* Interactive GPU Cursor Glow Beam */}
+      <CursorGlow />
+
       {/* Top 1:1 Instant Scroll Progress Indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 z-50 origin-left pointer-events-none transform-gpu will-change-transform shadow-[0_0_10px_rgba(34,211,238,0.8)]"

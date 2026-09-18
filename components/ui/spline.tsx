@@ -59,6 +59,25 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
       mouseX.set(normX);
       mouseY.set(normY);
 
+      // Forward pointer position to Spline canvas so the 3D robot tracks the cursor smoothly
+      if (containerRef.current) {
+        const canvas = containerRef.current.querySelector('canvas');
+        if (canvas) {
+          const syntheticPointer = new PointerEvent('pointermove', {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            screenX: e.screenX,
+            screenY: e.screenY,
+            bubbles: false,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'mouse',
+            isPrimary: true,
+          });
+          canvas.dispatchEvent(syntheticPointer);
+        }
+      }
+
       rafRef.current = null;
     };
 
@@ -103,9 +122,9 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
         </div>
       )}
 
-      {/* Spline Canvas - pointer-events-none allows native mouse-wheel scrolling without scroll trapping while window pointer tracker handles 3D tracking */}
+      {/* Spline Canvas */}
       <div
-        className={`w-full h-full transition-all duration-500 ease-out transform-gpu pointer-events-none ${
+        className={`w-full h-full transition-all duration-500 ease-out transform-gpu pointer-events-auto ${
           isLoaded
             ? 'opacity-100 scale-100 blur-0'
             : 'opacity-0 scale-95 blur-sm'
@@ -114,7 +133,7 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
         <Suspense fallback={null}>
           <Spline
             scene={scene}
-            className={`${className || ''} w-full h-full pointer-events-none [touch-action:pan-y]`}
+            className={`${className || ''} w-full h-full pointer-events-auto [touch-action:pan-y]`}
             onLoad={handleLoad}
           />
         </Suspense>
