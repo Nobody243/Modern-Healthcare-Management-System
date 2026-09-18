@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { fetchWithCache } from '@/lib/api-cache';
 
 interface MedicalRecord {
   MDR_ID: number;
@@ -35,21 +36,19 @@ export default function RecordsClient({ doctorId }: RecordsClientProps) {
 
   const fetchRecords = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`/api/doctors/${doctorId}/records`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch medical records: ${response.status}`);
-      }
-      const data = await response.json();
+      if (records.length === 0) setLoading(true);
+      const data = await fetchWithCache<MedicalRecord[]>(`/api/doctors/${doctorId}/records`);
       setRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching medical records:', error);
-      toast.error('Failed to load medical records');
-      setRecords([]);
+      if (records.length === 0) {
+        toast.error('Failed to load medical records');
+        setRecords([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [doctorId]);
+  }, [doctorId, records.length]);
 
   useEffect(() => {
     fetchRecords();

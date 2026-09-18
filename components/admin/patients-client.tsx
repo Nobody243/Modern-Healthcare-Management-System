@@ -10,6 +10,7 @@ import { PatientDetailModal } from './patient-detail-modal';
 import { PatientForm } from './patient-form';
 import { toast } from 'sonner';
 import { useSafeDelete, SafeDeleteDialogs } from '@/lib/use-safe-delete';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Patient {
   PAT_ID: number;
@@ -36,17 +37,20 @@ export default function PatientsClient() {
     fetchPatients();
   }, []);
 
-  async function fetchPatients() {
+  async function fetchPatients(skipCache = false) {
     try {
-      setLoading(true);
-      const res = await fetch('/api/patients');
-      if (!res.ok) throw new Error('Failed to fetch patients');
-      const data = await res.json();
+      if (patients.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/patients');
+      }
+      const data = await fetchWithCache<Patient[]>('/api/patients');
       setPatients(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching patients:', error);
-      setPatients([]);
-      toast.error('Failed to load patients');
+      if (patients.length === 0) {
+        setPatients([]);
+        toast.error('Failed to load patients');
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +62,7 @@ export default function PatientsClient() {
       itemType: 'Patient',
       itemTitle: `${patient.PAT_FNAME} ${patient.PAT_LNAME}`,
       successMessage: 'Patient deleted successfully',
-      onSuccess: fetchPatients,
+      onSuccess: () => fetchPatients(true),
     });
   }
 
@@ -78,7 +82,7 @@ export default function PatientsClient() {
   };
 
   const handleSuccess = () => {
-    fetchPatients();
+    fetchPatients(true);
     handleCloseForm();
   };
 

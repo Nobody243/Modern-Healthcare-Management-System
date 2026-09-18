@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import PayrollsForm from './payrolls-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Payroll {
   PAY_ID: number;
@@ -36,17 +37,20 @@ export default function PayrollsClient() {
     fetchPayrolls();
   }, []);
 
-  const fetchPayrolls = async () => {
+  const fetchPayrolls = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/payrolls');
-      if (!response.ok) throw new Error('Failed to fetch payrolls');
-      const data = await response.json();
+      if (payrolls.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/payrolls');
+      }
+      const data = await fetchWithCache<Payroll[]>('/api/payrolls');
       setPayrolls(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching payrolls:', error);
-      toast.error('Failed to load payrolls');
-      setPayrolls([]);
+      if (payrolls.length === 0) {
+        toast.error('Failed to load payrolls');
+        setPayrolls([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +62,7 @@ export default function PayrollsClient() {
       itemType: 'Payroll Record',
       itemTitle: payroll.PAY_NUMBER || `Payroll #${payroll.PAY_ID}`,
       successMessage: 'Payroll record deleted successfully',
-      onSuccess: fetchPayrolls,
+      onSuccess: () => fetchPayrolls(true),
     });
   }
 
@@ -78,7 +82,7 @@ export default function PayrollsClient() {
   };
 
   const handleSuccess = () => {
-    fetchPayrolls();
+    fetchPayrolls(true);
     handleCloseForm();
   };
 

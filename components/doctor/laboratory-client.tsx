@@ -11,6 +11,7 @@ import { TestTube2, Loader2, Plus, Edit, Trash2, Search, CheckCircle2, Clock, Fl
 import { LaboratoryForm } from './laboratory-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface LabTest {
   LAB_ID: number;
@@ -47,22 +48,24 @@ export default function DoctorLaboratoryClient() {
     }
   }, [searchParams]);
 
-  const fetchLabTests = async () => {
+  const fetchLabTests = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const doctorResponse = await fetch('/api/doctors/me');
-      if (!doctorResponse.ok) throw new Error('Failed to fetch doctor data');
-      const doctor = await doctorResponse.json();
+      if (labTests.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/laboratory');
+        invalidateApiCache('/api/doctors');
+      }
+      const doctor = await fetchWithCache<any>('/api/doctors/me');
       setDoctorNumber(doctor.DOC_NUMBER);
 
-      const response = await fetch(`/api/doctors/${doctor.DOC_NUMBER}/laboratory`);
-      if (!response.ok) throw new Error('Failed to fetch laboratory tests');
-      const data = await response.json();
+      const data = await fetchWithCache<LabTest[]>(`/api/doctors/${doctor.DOC_NUMBER}/laboratory`);
       setLabTests(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching laboratory tests:', error);
-      toast.error('Failed to load laboratory tests');
-      setLabTests([]);
+      if (labTests.length === 0) {
+        toast.error('Failed to load laboratory tests');
+        setLabTests([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,12 +87,12 @@ export default function DoctorLaboratoryClient() {
       itemType: 'Lab Test',
       itemTitle: labTest.LAB_NUMBER || `Lab #${labTest.LAB_ID}`,
       successMessage: 'Lab test deleted successfully',
-      onSuccess: fetchLabTests,
+      onSuccess: () => fetchLabTests(true),
     });
   }
 
   const handleFormSuccess = () => {
-    fetchLabTests();
+    fetchLabTests(true);
     setEditingLabTest(undefined);
   };
 

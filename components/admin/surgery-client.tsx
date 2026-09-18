@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import SurgeryForm, { Surgery } from './surgery-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 export default function SurgeryClient() {
   const safeDelete = useSafeDelete();
@@ -23,17 +24,20 @@ export default function SurgeryClient() {
     fetchSurgeries();
   }, []);
 
-  const fetchSurgeries = async () => {
+  const fetchSurgeries = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/surgery');
-      if (!response.ok) throw new Error('Failed to fetch surgeries');
-      const data = await response.json();
+      if (surgeries.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/surgery');
+      }
+      const data = await fetchWithCache<Surgery[]>('/api/surgery');
       setSurgeries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching surgeries:', error);
-      toast.error('Failed to load surgeries');
-      setSurgeries([]);
+      if (surgeries.length === 0) {
+        toast.error('Failed to load surgeries');
+        setSurgeries([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -45,7 +49,7 @@ export default function SurgeryClient() {
       itemType: 'Surgery Record',
       itemTitle: surgery.SURG_NUMBER || `Surgery #${surgery.SURG_ID}`,
       successMessage: 'Surgery record deleted successfully',
-      onSuccess: fetchSurgeries,
+      onSuccess: () => fetchSurgeries(true),
     });
   }
 
@@ -65,7 +69,7 @@ export default function SurgeryClient() {
   };
 
   const handleSuccess = () => {
-    fetchSurgeries();
+    fetchSurgeries(true);
     handleCloseForm();
   };
 

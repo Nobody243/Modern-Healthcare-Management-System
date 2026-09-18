@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import AssetsForm from './assets-form';
 import { toast } from 'sonner';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Asset {
   ASST_ID: number;
@@ -31,17 +32,20 @@ export default function AssetsClient() {
     fetchAssets();
   }, []);
 
-  const fetchAssets = async () => {
+  const fetchAssets = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/assets');
-      if (!response.ok) throw new Error('Failed to fetch assets');
-      const data = await response.json();
+      if (assets.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/assets');
+      }
+      const data = await fetchWithCache<Asset[]>('/api/assets');
       setAssets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching assets:', error);
-      toast.error('Failed to load assets');
-      setAssets([]);
+      if (assets.length === 0) {
+        toast.error('Failed to load assets');
+        setAssets([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +57,7 @@ export default function AssetsClient() {
       itemType: 'Asset',
       itemTitle: asset.ASST_NAME,
       successMessage: 'Asset deleted successfully',
-      onSuccess: fetchAssets,
+      onSuccess: () => fetchAssets(true),
     });
   }
 
@@ -73,7 +77,7 @@ export default function AssetsClient() {
   };
 
   const handleSuccess = () => {
-    fetchAssets();
+    fetchAssets(true);
     handleCloseForm();
   };
 

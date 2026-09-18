@@ -65,6 +65,7 @@
   html {
     /* Natural native scrolling - programmatic smooth scroll used on anchor buttons */
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   /* Default: Disable text selection across UI chrome for a clean native app feel */

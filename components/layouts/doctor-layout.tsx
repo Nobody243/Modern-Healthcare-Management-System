@@ -98,16 +98,21 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
                 prefetch={true}
                 onMouseEnter={() => item.api && preloadApi(item.api)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
+                  "relative flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium",
                   isActive
-                    ? item.href === '/doctor/dashboard'
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold"
-                      : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/40 dark:shadow-emerald-500/30 font-semibold"
+                    ? "text-white font-semibold"
                     : "text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-300"
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="doctorSidebarActivePill"
+                    className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg shadow-lg shadow-emerald-500/30"
+                    transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
+                  />
+                )}
+                <Icon className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">{item.label}</span>
               </Link>
             );
           })}

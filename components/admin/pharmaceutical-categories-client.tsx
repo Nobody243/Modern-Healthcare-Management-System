@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import PharmaceuticalCategoriesForm from './pharmaceutical-categories-form';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface PharmaceuticalCategory {
   PHARM_CAT_ID: number;
@@ -29,17 +31,20 @@ export default function PharmaceuticalCategoriesClient() {
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/pharmaceutical-categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      const data = await response.json();
+      if (categories.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/pharmaceutical-categories');
+      }
+      const data = await fetchWithCache<PharmaceuticalCategory[]>('/api/pharmaceutical-categories');
       setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to load pharmaceutical categories');
-      setCategories([]);
+      if (categories.length === 0) {
+        toast.error('Failed to load pharmaceutical categories');
+        setCategories([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,7 @@ export default function PharmaceuticalCategoriesClient() {
       itemType: 'Category',
       itemTitle: category.PHARM_CAT_NAME,
       successMessage: 'Category deleted successfully',
-      onSuccess: fetchCategories,
+      onSuccess: () => fetchCategories(true),
     });
   }
 
@@ -71,7 +76,7 @@ export default function PharmaceuticalCategoriesClient() {
   };
 
   const handleSuccess = () => {
-    fetchCategories();
+    fetchCategories(true);
     handleCloseForm();
   };
 

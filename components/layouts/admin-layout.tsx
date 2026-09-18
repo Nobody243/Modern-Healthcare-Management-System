@@ -20,6 +20,7 @@ import {
   Clipboard,
   Wallet
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -60,27 +61,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
     try {
+      setIsLoggingOut(true);
       await fetch('/api/auth/logout', { method: 'POST' });
       window.location.href = '/login';
-    } catch (err) {
-      console.error('Logout error:', err);
-      window.location.href = '/login';
-    } finally {
+    } catch (error) {
+      console.error('Logout error:', error);
       setIsLoggingOut(false);
+      setLogoutOpen(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-hospital-gradient transition-colors duration-300">
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Mobile sidebar toggle button */}
+      <div className="lg:hidden fixed top-4 right-4 z-50">
         <button
+          type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white transition-colors"
+          className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700"
         >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {sidebarOpen ? <X className="text-slate-900 dark:text-slate-100" /> : <Menu className="text-slate-900 dark:text-slate-100" />}
         </button>
       </div>
 
@@ -97,7 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-220px)]">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             
@@ -107,16 +108,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 href={item.href}
                 prefetch={true}
                 onMouseEnter={() => item.api && preloadApi(item.api)}
-                style={{ animationDelay: `${index * 0.05}s` }}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover-lift animate-fade-in",
+                  "relative flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium",
                   isActive
-                    ? "bg-gradient-to-r from-sky-500 to-cyan-500 dark:from-sky-600 dark:to-cyan-600 text-white shadow-lg shadow-sky-500/30"
+                    ? "text-white font-semibold"
                     : "text-slate-900 dark:text-white hover:bg-sky-50 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-400"
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="adminSidebarActivePill"
+                    className="absolute inset-0 bg-gradient-to-r from-sky-500 to-cyan-500 dark:from-sky-600 dark:to-cyan-600 rounded-lg shadow-lg shadow-sky-500/30"
+                    transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
+                  />
+                )}
+                <Icon className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">{item.label}</span>
               </Link>
             );
           })}

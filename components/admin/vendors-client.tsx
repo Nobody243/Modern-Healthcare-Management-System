@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import VendorsForm from './vendors-form';
 import { toast } from 'sonner';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Vendor {
   V_ID: number;
@@ -32,17 +33,20 @@ export default function VendorsClient() {
     fetchVendors();
   }, []);
 
-  const fetchVendors = async () => {
+  const fetchVendors = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/vendors');
-      if (!response.ok) throw new Error('Failed to fetch vendors');
-      const data = await response.json();
+      if (vendors.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/vendors');
+      }
+      const data = await fetchWithCache<Vendor[]>('/api/vendors');
       setVendors(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching vendors:', error);
-      toast.error('Failed to load vendors');
-      setVendors([]);
+      if (vendors.length === 0) {
+        toast.error('Failed to load vendors');
+        setVendors([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -54,7 +58,7 @@ export default function VendorsClient() {
       itemType: 'Vendor',
       itemTitle: vendor.V_NAME,
       successMessage: 'Vendor deleted successfully',
-      onSuccess: fetchVendors,
+      onSuccess: () => fetchVendors(true),
     });
   }
 
@@ -74,7 +78,7 @@ export default function VendorsClient() {
   };
 
   const handleSuccess = () => {
-    fetchVendors();
+    fetchVendors(true);
     handleCloseForm();
   };
 

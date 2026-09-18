@@ -10,22 +10,27 @@ import { Badge } from '@/components/ui/badge';
 import PrescriptionsForm from './prescriptions-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Prescription {
   PRES_ID: number;
   PRES_NUMBER: string;
   PRES_PAT_NUMBER: string;
-  PRES_PAT_NAME: string;
-  PRES_DOC_NUMBER: string;
-  PRES_DOC_NAME: string;
+  PAT_FNAME?: string;
+  PAT_LNAME?: string;
+  PRES_PAT_NAME?: string;
   PRES_MEDICATION: string;
   PRES_DOSAGE: string;
   PRES_FREQUENCY: string;
   PRES_DURATION: string;
-  PRES_DATE: string;
   PRES_STATUS: string;
-  PRES_REFILLS_REMAINING: number;
-  PRES_NOTES: string;
+  PRES_DATE: string;
+  PRES_REFILLS_REMAINING?: number;
+  PRES_NOTES?: string;
+  DOC_FNAME?: string;
+  DOC_LNAME?: string;
+  PRES_DOC_NAME?: string;
+  PRES_DOC_NUMBER?: string;
 }
 
 export default function PrescriptionsClient() {
@@ -40,17 +45,20 @@ export default function PrescriptionsClient() {
     fetchPrescriptions();
   }, []);
 
-  const fetchPrescriptions = async () => {
+  const fetchPrescriptions = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/prescriptions');
-      if (!response.ok) throw new Error('Failed to fetch prescriptions');
-      const data = await response.json();
+      if (prescriptions.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/prescriptions');
+      }
+      const data = await fetchWithCache<Prescription[]>('/api/prescriptions');
       setPrescriptions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching prescriptions:', error);
-      toast.error('Failed to load prescriptions');
-      setPrescriptions([]);
+      if (prescriptions.length === 0) {
+        toast.error('Failed to load prescriptions');
+        setPrescriptions([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +70,7 @@ export default function PrescriptionsClient() {
       itemType: 'Prescription',
       itemTitle: prescription.PRES_NUMBER || `Prescription #${prescription.PRES_ID}`,
       successMessage: 'Prescription deleted successfully',
-      onSuccess: fetchPrescriptions,
+      onSuccess: () => fetchPrescriptions(true),
     });
   }
 
@@ -82,7 +90,7 @@ export default function PrescriptionsClient() {
   };
 
   const handleSuccess = () => {
-    fetchPrescriptions();
+    fetchPrescriptions(true);
     handleCloseForm();
   };
 

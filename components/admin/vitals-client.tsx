@@ -10,16 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import VitalsForm from './vitals-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Vitals {
   VIT_ID: number;
   VIT_PAT_NUMBER: string;
   VIT_PAT_NAME: string;
+  VIT_WEIGHT: number;
   VIT_BODYTEMP: number;
+  VIT_BLOOD_PRESSURE: string;
   VIT_HEARTPULSE: number;
   VIT_RESPIRATION: number;
-  VIT_WEIGHT: number;
-  VIT_BLOOD_PRESSURE: string;
   VIT_OXYGEN_SAT: number;
   VIT_RECORDED_BY: string;
   VIT_RECORDED_DATE: string;
@@ -37,17 +38,20 @@ export default function VitalsClient() {
     fetchVitals();
   }, []);
 
-  const fetchVitals = async () => {
+  const fetchVitals = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/vitals');
-      if (!response.ok) throw new Error('Failed to fetch vitals');
-      const data = await response.json();
+      if (vitals.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/vitals');
+      }
+      const data = await fetchWithCache<Vitals[]>('/api/vitals');
       setVitals(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching vitals:', error);
-      toast.error('Failed to load vitals');
-      setVitals([]);
+      if (vitals.length === 0) {
+        toast.error('Failed to load vitals');
+        setVitals([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +63,7 @@ export default function VitalsClient() {
       itemType: 'Vitals Record',
       itemTitle: `${vital.VIT_PAT_NAME || 'Patient'} (${vital.VIT_PAT_NUMBER})`,
       successMessage: 'Vitals record deleted successfully',
-      onSuccess: fetchVitals,
+      onSuccess: () => fetchVitals(true),
     });
   }
 
@@ -79,7 +83,7 @@ export default function VitalsClient() {
   };
 
   const handleSuccess = () => {
-    fetchVitals();
+    fetchVitals(true);
     handleCloseForm();
   };
 

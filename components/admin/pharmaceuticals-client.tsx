@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PharmaceuticalForm, Pharmaceutical } from './pharmaceutical-form';
 import { toast } from 'sonner';
 import { useSafeDelete, SafeDeleteDialogs } from '@/lib/use-safe-delete';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 export default function PharmaceuticalsClient() {
   const [pharmaceuticals, setPharmaceuticals] = useState<Pharmaceutical[]>([]);
@@ -22,17 +23,20 @@ export default function PharmaceuticalsClient() {
     fetchPharmaceuticals();
   }, []);
 
-  async function fetchPharmaceuticals() {
+  async function fetchPharmaceuticals(skipCache = false) {
     try {
-      setLoading(true);
-      const res = await fetch('/api/pharmaceuticals');
-      if (!res.ok) throw new Error('Failed to fetch pharmaceuticals');
-      const data = await res.json();
+      if (pharmaceuticals.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/pharmaceuticals');
+      }
+      const data = await fetchWithCache<Pharmaceutical[]>('/api/pharmaceuticals');
       setPharmaceuticals(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching pharmaceuticals:', error);
-      setPharmaceuticals([]);
-      toast.error('Failed to load pharmaceuticals');
+      if (pharmaceuticals.length === 0) {
+        setPharmaceuticals([]);
+        toast.error('Failed to load pharmaceuticals');
+      }
     } finally {
       setLoading(false);
     }
@@ -44,7 +48,7 @@ export default function PharmaceuticalsClient() {
       itemType: 'Pharmaceutical',
       itemTitle: item.PHAR_NAME,
       successMessage: 'Pharmaceutical deleted successfully',
-      onSuccess: fetchPharmaceuticals,
+      onSuccess: () => fetchPharmaceuticals(true),
     });
   }
 
@@ -60,7 +64,7 @@ export default function PharmaceuticalsClient() {
 
   function handleFormSuccess() {
     toast.success(`Pharmaceutical ${selectedPharmaceutical ? 'updated' : 'added'} successfully`);
-    fetchPharmaceuticals();
+    fetchPharmaceuticals(true);
   }
 
   const filteredPharmaceuticals = useMemo(() => {

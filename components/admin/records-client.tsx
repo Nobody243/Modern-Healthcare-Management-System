@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import RecordsForm, { MedicalRecord } from './records-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 export default function RecordsClient() {
   const safeDelete = useSafeDelete();
@@ -22,17 +23,20 @@ export default function RecordsClient() {
     fetchRecords();
   }, []);
 
-  const fetchRecords = async () => {
+  const fetchRecords = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/records');
-      if (!response.ok) throw new Error('Failed to fetch records');
-      const data = await response.json();
+      if (records.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/records');
+      }
+      const data = await fetchWithCache<MedicalRecord[]>('/api/records');
       setRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching records:', error);
-      toast.error('Failed to load medical records');
-      setRecords([]);
+      if (records.length === 0) {
+        toast.error('Failed to load medical records');
+        setRecords([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -44,7 +48,7 @@ export default function RecordsClient() {
       itemType: 'Medical Record',
       itemTitle: record.MDR_NUMBER || `Record #${record.MDR_ID}`,
       successMessage: 'Medical record deleted successfully',
-      onSuccess: fetchRecords,
+      onSuccess: () => fetchRecords(true),
     });
   }
 
@@ -64,7 +68,7 @@ export default function RecordsClient() {
   };
 
   const handleSuccess = () => {
-    fetchRecords();
+    fetchRecords(true);
     handleCloseForm();
   };
 

@@ -131,18 +131,18 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
         </div>
       )}
 
-      {/* Spline Canvas */}
+      {/* Spline Canvas - pointer-events-none allows native mouse-wheel scrolling without scroll trapping while window pointer tracker handles 3D tracking */}
       <div
-        className={`w-full h-full transition-all duration-500 ease-out transform-gpu ${
+        className={`w-full h-full transition-all duration-500 ease-out transform-gpu pointer-events-none ${
           isLoaded
             ? 'opacity-100 scale-100 blur-0'
-            : 'opacity-0 scale-95 blur-sm pointer-events-none'
+            : 'opacity-0 scale-95 blur-sm'
         }`}
       >
         <Suspense fallback={null}>
           <Spline
             scene={scene}
-            className={`${className || ''} w-full h-full [touch-action:pan-y]`}
+            className={`${className || ''} w-full h-full pointer-events-none [touch-action:pan-y]`}
             onLoad={handleLoad}
           />
         </Suspense>

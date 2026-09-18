@@ -11,6 +11,7 @@ import { HeartPulse, Loader2, Plus, Edit, Trash2, Search, Thermometer, Wind, Act
 import { VitalsForm } from './vitals-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Vital {
   VIT_ID: number;
@@ -46,22 +47,24 @@ export default function DoctorVitalsClient() {
     }
   }, [searchParams]);
 
-  const fetchVitals = async () => {
+  const fetchVitals = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const doctorResponse = await fetch('/api/doctors/me');
-      if (!doctorResponse.ok) throw new Error('Failed to fetch doctor data');
-      const doctor = await doctorResponse.json();
+      if (vitals.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/vitals');
+        invalidateApiCache('/api/doctors');
+      }
+      const doctor = await fetchWithCache<any>('/api/doctors/me');
       setDoctorNumber(doctor.DOC_NUMBER);
 
-      const response = await fetch(`/api/doctors/${doctor.DOC_NUMBER}/vitals`);
-      if (!response.ok) throw new Error('Failed to fetch vitals');
-      const data = await response.json();
+      const data = await fetchWithCache<Vital[]>(`/api/doctors/${doctor.DOC_NUMBER}/vitals`);
       setVitals(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching vitals:', error);
-      toast.error('Failed to load vitals');
-      setVitals([]);
+      if (vitals.length === 0) {
+        toast.error('Failed to load vitals');
+        setVitals([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,12 +86,12 @@ export default function DoctorVitalsClient() {
       itemType: 'Vital Record',
       itemTitle: `${vital.VIT_PAT_NAME || 'Patient'} (${vital.VIT_PAT_NUMBER})`,
       successMessage: 'Vital record deleted successfully',
-      onSuccess: fetchVitals,
+      onSuccess: () => fetchVitals(true),
     });
   }
 
   const handleFormSuccess = () => {
-    fetchVitals();
+    fetchVitals(true);
     setEditingVital(undefined);
   };
 

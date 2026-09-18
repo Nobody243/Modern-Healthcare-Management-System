@@ -512,11 +512,13 @@ export default function HomePage() {
   // Direct 1:1 scroll progress without laggy spring
   const { scrollYProgress } = useScroll();
 
-  // Scroll spy to update top navbar pill smoothly as user scrolls
+  // High-performance rAF-throttled scroll spy for instant, jitter-free active nav pill tracking
   useEffect(() => {
     const sectionIds = ['hero', 'telemetry', 'portals', 'architecture', 'security'];
-    const handleScroll = () => {
-      const scrollPos = window.scrollY + 200;
+    let rafId: number | null = null;
+
+    const updateActiveSection = () => {
+      const scrollPos = window.scrollY + 180;
       for (let i = sectionIds.length - 1; i >= 0; i--) {
         const el = document.getElementById(sectionIds[i]);
         if (el && el.offsetTop <= scrollPos) {
@@ -524,10 +526,21 @@ export default function HomePage() {
           break;
         }
       }
+      rafId = null;
+    };
+
+    const handleScroll = () => {
+      if (rafId === null) {
+        rafId = requestAnimationFrame(updateActiveSection);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    updateActiveSection(); // Initialize on mount
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Real-time movie timecode simulation (HH:MM:SS:FF)
@@ -639,8 +652,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden">
       {/* Top 1:1 Instant Scroll Progress Indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 z-50 origin-left"
-        style={{ scaleX: scrollYProgress }}
+        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 z-50 origin-left pointer-events-none transform-gpu will-change-transform shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+        style={{ scaleX: scrollYProgress, transformOrigin: '0%' }}
       />
 
       {/* Background Architectural Grid & Precision Laser Scan Lines */}
@@ -700,8 +713,8 @@ export default function HomePage() {
                   {isActive && (
                     <motion.div
                       layoutId="activeNavIndicator"
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-full"
-                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.15)]"
+                      transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
                     />
                   )}
                   <span className="relative z-10">{navItem.label}</span>
@@ -954,7 +967,7 @@ export default function HomePage() {
                       <motion.div
                         layoutId="activePortalTabPill"
                         className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/30"
-                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-2">

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import EquipmentsForm from './equipments-form';
 import { toast } from 'sonner';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Equipment {
   EQP_ID: number;
@@ -33,17 +34,20 @@ export default function EquipmentsClient() {
     fetchEquipments();
   }, []);
 
-  const fetchEquipments = async () => {
+  const fetchEquipments = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/equipments');
-      if (!response.ok) throw new Error('Failed to fetch equipments');
-      const data = await response.json();
+      if (equipments.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/equipments');
+      }
+      const data = await fetchWithCache<Equipment[]>('/api/equipments');
       setEquipments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching equipments:', error);
-      toast.error('Failed to load equipments');
-      setEquipments([]);
+      if (equipments.length === 0) {
+        toast.error('Failed to load equipments');
+        setEquipments([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -55,7 +59,7 @@ export default function EquipmentsClient() {
       itemType: 'Equipment',
       itemTitle: equipment.EQP_NAME,
       successMessage: 'Equipment deleted successfully',
-      onSuccess: fetchEquipments,
+      onSuccess: () => fetchEquipments(true),
     });
   }
 
@@ -75,7 +79,7 @@ export default function EquipmentsClient() {
   };
 
   const handleSuccess = () => {
-    fetchEquipments();
+    fetchEquipments(true);
     handleCloseForm();
   };
 

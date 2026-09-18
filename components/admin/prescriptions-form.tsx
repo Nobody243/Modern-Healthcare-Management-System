@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Loader2, User, FileText, Pill, Calendar, Clock } from 'lucide-react';
+import { X, Loader2, User, FileText, Pill } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,21 +10,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 
-interface Prescription {
+export interface Prescription {
   PRES_ID: number;
   PRES_NUMBER: string;
   PRES_PAT_NUMBER: string;
-  PRES_PAT_NAME: string;
-  PRES_DOC_NUMBER: string;
-  PRES_DOC_NAME: string;
+  PRES_PAT_NAME?: string;
+  PAT_FNAME?: string;
+  PAT_LNAME?: string;
+  PRES_DOC_NUMBER?: string;
+  PRES_DOC_NAME?: string;
+  DOC_FNAME?: string;
+  DOC_LNAME?: string;
   PRES_MEDICATION: string;
   PRES_DOSAGE: string;
   PRES_FREQUENCY: string;
   PRES_DURATION: string;
   PRES_DATE: string;
   PRES_STATUS: string;
-  PRES_REFILLS_REMAINING: number;
-  PRES_NOTES: string;
+  PRES_REFILLS_REMAINING?: number;
+  PRES_NOTES?: string;
 }
 
 interface Props {

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Loader2, Plus, Edit, Search, Phone, Mail, UserCheck, Hospital, Activity, User } from 'lucide-react';
 import { PatientForm } from './patient-form';
 import { toast } from 'sonner';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Patient {
   PAT_ID: number;
@@ -48,22 +49,23 @@ export default function DoctorPatientsClient() {
     }
   }, [searchParams]);
 
-  const fetchDoctorAndPatients = async () => {
+  const fetchDoctorAndPatients = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const doctorResponse = await fetch('/api/doctors/me');
-      if (!doctorResponse.ok) throw new Error('Failed to fetch doctor data');
-      const doctorData = await doctorResponse.json();
+      if (patients.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/doctors');
+      }
+      const doctorData = await fetchWithCache<Doctor>('/api/doctors/me');
       setDoctor(doctorData);
 
-      const patientsResponse = await fetch(`/api/doctors/${doctorData.DOC_NUMBER}/patients`);
-      if (!patientsResponse.ok) throw new Error('Failed to fetch patients');
-      const patientsData = await patientsResponse.json();
+      const patientsData = await fetchWithCache<Patient[]>(`/api/doctors/${doctorData.DOC_NUMBER}/patients`);
       setPatients(Array.isArray(patientsData) ? patientsData : []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load assigned patients');
-      setPatients([]);
+      if (patients.length === 0) {
+        toast.error('Failed to load assigned patients');
+        setPatients([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,7 +82,7 @@ export default function DoctorPatientsClient() {
   };
 
   const handleFormSuccess = () => {
-    fetchDoctorAndPatients();
+    fetchDoctorAndPatients(true);
   };
 
   const filteredPatients = useMemo(() => {

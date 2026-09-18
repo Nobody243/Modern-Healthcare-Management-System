@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,17 +22,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface Prescription {
+export interface Prescription {
   PRES_ID: number;
   PRES_NUMBER: string;
   PRES_PAT_NUMBER: string;
+  PRES_PAT_NAME?: string;
+  PAT_FNAME?: string;
+  PAT_LNAME?: string;
   PRES_MEDICATION: string;
   PRES_DOSAGE: string;
   PRES_FREQUENCY: string;
   PRES_DURATION: string;
   PRES_STATUS: string;
-  PRES_REFILLS_REMAINING: number;
-  PRES_NOTES: string;
+  PRES_DATE?: string;
+  PRES_REFILLS_REMAINING?: number;
+  PRES_NOTES?: string;
+  PRES_DOC_NUMBER?: string;
+  PRES_DOC_NAME?: string;
 }
 
 interface Patient {

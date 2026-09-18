@@ -11,6 +11,7 @@ import { ArrowLeftRight, Loader2, Plus, Edit, Trash2, Search, CheckCircle2, Cloc
 import { PatientTransferForm } from './patient-transfers-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface PatientTransfer {
   PT_ID: number;
@@ -44,22 +45,24 @@ export default function DoctorPatientTransfersClient() {
     }
   }, [searchParams]);
 
-  const fetchTransfers = async () => {
+  const fetchTransfers = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const doctorResponse = await fetch('/api/doctors/me');
-      if (!doctorResponse.ok) throw new Error('Failed to fetch doctor data');
-      const doctor = await doctorResponse.json();
+      if (transfers.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/patient-transfers');
+        invalidateApiCache('/api/doctors');
+      }
+      const doctor = await fetchWithCache<any>('/api/doctors/me');
       setDoctorName(`${doctor.DOC_FNAME} ${doctor.DOC_LNAME}`);
 
-      const response = await fetch(`/api/doctors/${doctor.DOC_NUMBER}/patient-transfers`);
-      if (!response.ok) throw new Error('Failed to fetch patient transfers');
-      const data = await response.json();
+      const data = await fetchWithCache<PatientTransfer[]>(`/api/doctors/${doctor.DOC_NUMBER}/patient-transfers`);
       setTransfers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching patient transfers:', error);
-      toast.error('Failed to load patient transfers');
-      setTransfers([]);
+      if (transfers.length === 0) {
+        toast.error('Failed to load patient transfers');
+        setTransfers([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,12 +84,12 @@ export default function DoctorPatientTransfersClient() {
       itemType: 'Patient Transfer',
       itemTitle: `${transfer.PT_PAT_NAME || 'Transfer'} (${transfer.PT_FROM_WARD} → ${transfer.PT_TO_WARD})`,
       successMessage: 'Transfer deleted successfully',
-      onSuccess: fetchTransfers,
+      onSuccess: () => fetchTransfers(true),
     });
   }
 
   const handleFormSuccess = () => {
-    fetchTransfers();
+    fetchTransfers(true);
     setEditingTransfer(undefined);
   };
 

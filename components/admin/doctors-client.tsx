@@ -9,14 +9,17 @@ import { Badge } from '@/components/ui/badge';
 import { DoctorForm } from './doctor-form';
 import { toast } from 'sonner';
 import { useSafeDelete, SafeDeleteDialogs } from '@/lib/use-safe-delete';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Doctor {
   DOC_ID: number;
   DOC_FNAME: string;
   DOC_LNAME: string;
+  DOC_NUMBER: string;
+  DOC_PHONE: string;
   DOC_EMAIL: string;
   DOC_DEPT: string;
-  DOC_NUMBER: string;
+  DOC_STATUS: string;
 }
 
 export default function DoctorsClient() {
@@ -31,17 +34,20 @@ export default function DoctorsClient() {
     fetchDoctors();
   }, []);
 
-  async function fetchDoctors() {
+  async function fetchDoctors(skipCache = false) {
     try {
-      setLoading(true);
-      const res = await fetch('/api/doctors');
-      if (!res.ok) throw new Error('Failed to fetch doctors');
-      const data = await res.json();
+      if (doctors.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/doctors');
+      }
+      const data = await fetchWithCache<Doctor[]>('/api/doctors');
       setDoctors(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching doctors:', error);
-      setDoctors([]);
-      toast.error('Failed to load doctors');
+      if (doctors.length === 0) {
+        setDoctors([]);
+        toast.error('Failed to load doctors');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +59,7 @@ export default function DoctorsClient() {
       itemType: 'Doctor',
       itemTitle: `Dr. ${doctor.DOC_FNAME} ${doctor.DOC_LNAME}`,
       successMessage: 'Doctor deleted successfully',
-      onSuccess: fetchDoctors,
+      onSuccess: () => fetchDoctors(true),
     });
   }
 
@@ -69,7 +75,7 @@ export default function DoctorsClient() {
 
   function handleFormSuccess() {
     toast.success(`Doctor ${selectedDoctor ? 'updated' : 'added'} successfully`);
-    fetchDoctors();
+    fetchDoctors(true);
   }
 
   const filteredDoctors = useMemo(() => {

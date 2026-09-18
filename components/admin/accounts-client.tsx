@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Search, Loader2, Wallet, DollarSign, TrendingUp, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountsForm from './accounts-form';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Account {
   ACC_ID: number;
@@ -31,16 +32,19 @@ export default function AccountsClient() {
     fetchAccounts();
   }, []);
 
-  async function fetchAccounts() {
+  async function fetchAccounts(skipCache = false) {
     try {
-      setLoading(true);
-      const response = await fetch('/api/accounts');
-      if (!response.ok) throw new Error('Failed to fetch accounts');
-      const data = await response.json();
+      if (accounts.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/accounts');
+      }
+      const data = await fetchWithCache<Account[]>('/api/accounts');
       setAccounts(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to fetch accounts');
-      setAccounts([]);
+      if (accounts.length === 0) {
+        toast.error((error as Error).message || 'Failed to fetch accounts');
+        setAccounts([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -52,7 +56,7 @@ export default function AccountsClient() {
       itemType: 'Account',
       itemTitle: account.ACC_NAME,
       successMessage: 'Account deleted successfully',
-      onSuccess: fetchAccounts,
+      onSuccess: () => fetchAccounts(true),
     });
   }
 
@@ -69,7 +73,7 @@ export default function AccountsClient() {
   const handleFormClose = () => {
     setIsFormOpen(false);
     setEditingAccount(null);
-    fetchAccounts();
+    fetchAccounts(true);
   };
 
   const filteredAccounts = useMemo(() => {

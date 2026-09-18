@@ -8,8 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LaboratoryForm, Laboratory } from './laboratory-form';
 import { toast } from 'sonner';
-import { formatDate } from '@/lib/utils';
 import { useSafeDelete, SafeDeleteDialogs } from '@/lib/use-safe-delete';
+import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 export default function LaboratoryClient() {
   const safeDelete = useSafeDelete();
@@ -19,17 +20,20 @@ export default function LaboratoryClient() {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedLab, setSelectedLab] = useState<Laboratory | undefined>();
 
-  const fetchLabs = async () => {
+  const fetchLabs = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const res = await fetch('/api/laboratory');
-      if (!res.ok) throw new Error('Failed to fetch laboratory records');
-      const data = await res.json();
+      if (labs.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/laboratory');
+      }
+      const data = await fetchWithCache<Laboratory[]>('/api/laboratory');
       setLabs(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching labs:', error);
-      setLabs([]);
-      toast.error('Failed to load laboratory records');
+      if (labs.length === 0) {
+        setLabs([]);
+        toast.error('Failed to load laboratory records');
+      }
     } finally {
       setLoading(false);
     }
@@ -45,7 +49,7 @@ export default function LaboratoryClient() {
       itemType: 'Lab Record',
       itemTitle: lab.LAB_NUMBER || `Lab #${lab.LAB_ID}`,
       successMessage: 'Laboratory record deleted successfully',
-      onSuccess: fetchLabs,
+      onSuccess: () => fetchLabs(true),
     });
   }
 

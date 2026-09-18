@@ -81,19 +81,21 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                     href={item.href}
                     prefetch={true}
                     onMouseEnter={() => item.api && preloadApi(item.api)}
+                    className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${
+                      isActive
+                        ? 'text-white font-semibold'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
                   >
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                        isActive
-                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/20'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{item.label}</span>
-                    </motion.div>
+                    {isActive && (
+                      <motion.div
+                        layoutId="patientSidebarActivePill"
+                        className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl shadow-lg shadow-blue-500/20"
+                        transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
+                      />
+                    )}
+                    <Icon className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">{item.label}</span>
                   </Link>
                 );
               })}

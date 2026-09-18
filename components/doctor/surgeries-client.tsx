@@ -10,6 +10,7 @@ import { Syringe, Loader2, Plus, Edit, Trash2, Search, CheckCircle2, Calendar, C
 import { toast } from 'sonner';
 import { SurgeryForm } from './surgery-form';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface Surgery {
   SURG_ID: number;
@@ -41,22 +42,24 @@ export default function DoctorSurgeriesClient() {
     fetchSurgeries();
   }, []);
 
-  const fetchSurgeries = async () => {
+  const fetchSurgeries = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const doctorResponse = await fetch('/api/doctors/me');
-      if (!doctorResponse.ok) throw new Error('Failed to fetch doctor data');
-      const doctor = await doctorResponse.json();
+      if (surgeries.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/surgery');
+        invalidateApiCache('/api/doctors');
+      }
+      const doctor = await fetchWithCache<any>('/api/doctors/me');
       setDoctorNumber(doctor.DOC_NUMBER);
 
-      const response = await fetch(`/api/doctors/${doctor.DOC_NUMBER}/surgeries`);
-      if (!response.ok) throw new Error('Failed to fetch surgeries');
-      const data = await response.json();
+      const data = await fetchWithCache<Surgery[]>(`/api/doctors/${doctor.DOC_NUMBER}/surgeries`);
       setSurgeries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching surgeries:', error);
-      toast.error('Failed to load surgeries');
-      setSurgeries([]);
+      if (surgeries.length === 0) {
+        toast.error('Failed to load surgeries');
+        setSurgeries([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +76,7 @@ export default function DoctorSurgeriesClient() {
       itemType: 'Surgery',
       itemTitle: surgery.SURG_NUMBER || `Surgery #${surgery.SURG_ID}`,
       successMessage: 'Surgery deleted successfully',
-      onSuccess: fetchSurgeries,
+      onSuccess: () => fetchSurgeries(true),
     });
   }
 
@@ -83,7 +86,7 @@ export default function DoctorSurgeriesClient() {
   };
 
   const handleFormSuccess = () => {
-    fetchSurgeries();
+    fetchSurgeries(true);
     setEditingSurgery(undefined);
   };
 

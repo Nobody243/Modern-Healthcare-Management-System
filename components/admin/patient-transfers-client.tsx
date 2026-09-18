@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import PatientTransfersForm from './patient-transfers-form';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 
 interface PatientTransfer {
   PT_ID: number;
@@ -35,17 +36,20 @@ export default function PatientTransfersClient() {
     fetchTransfers();
   }, []);
 
-  const fetchTransfers = async () => {
+  const fetchTransfers = async (skipCache = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/patient-transfers');
-      if (!response.ok) throw new Error('Failed to fetch transfers');
-      const data = await response.json();
+      if (transfers.length === 0) setLoading(true);
+      if (skipCache) {
+        invalidateApiCache('/api/patient-transfers');
+      }
+      const data = await fetchWithCache<PatientTransfer[]>('/api/patient-transfers');
       setTransfers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching transfers:', error);
-      toast.error('Failed to load patient transfers');
-      setTransfers([]);
+      if (transfers.length === 0) {
+        toast.error('Failed to load patient transfers');
+        setTransfers([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -57,7 +61,7 @@ export default function PatientTransfersClient() {
       itemType: 'Patient Transfer',
       itemTitle: `${transfer.PT_PAT_NAME || 'Transfer'} (${transfer.PT_FROM_WARD} → ${transfer.PT_TO_WARD})`,
       successMessage: 'Patient transfer record deleted successfully',
-      onSuccess: fetchTransfers,
+      onSuccess: () => fetchTransfers(true),
     });
   }
 
@@ -77,7 +81,7 @@ export default function PatientTransfersClient() {
   };
 
   const handleSuccess = () => {
-    fetchTransfers();
+    fetchTransfers(true);
     handleCloseForm();
   };
 
