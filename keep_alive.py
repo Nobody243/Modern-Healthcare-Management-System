@@ -52,8 +52,9 @@ def run_keep_alive() -> None:
     # 1. Validate and fetch required credentials from environment
     oracle_user = get_required_env("ORACLE_USER")
     oracle_password = get_required_env("ORACLE_PASSWORD")
-    oracle_wallet_base64 = get_required_env("ORACLE_WALLET_BASE64")
-    oracle_wallet_password = get_required_env("ORACLE_WALLET_PASSWORD")
+    oracle_wallet_base64_raw = get_required_env("ORACLE_WALLET_BASE64")
+    oracle_wallet_base64 = "".join(oracle_wallet_base64_raw.split())
+    oracle_wallet_password = os.environ.get("ORACLE_WALLET_PASSWORD", "").strip() or None
     oracle_tns_name = get_required_env("ORACLE_TNS_NAME")
 
     print(f"[{datetime.now(timezone.utc).isoformat()}] Validated environment configuration.")
@@ -67,9 +68,10 @@ def run_keep_alive() -> None:
             wallet_bytes = base64.b64decode(oracle_wallet_base64)
             with zipfile.ZipFile(io.BytesIO(wallet_bytes)) as zf:
                 zf.extractall(temp_wallet_dir)
-            print(f"[{datetime.now(timezone.utc).isoformat()}] Ephemeral wallet extracted to secure runtime sandbox.")
+            extracted_files = os.listdir(temp_wallet_dir)
+            print(f"[{datetime.now(timezone.utc).isoformat()}] Ephemeral wallet extracted ({len(extracted_files)} files: {', '.join(extracted_files)}).")
         except Exception as e:
-            print(f"[ERROR] Failed to decode and extract Oracle Wallet payload: {type(e).__name__}", file=sys.stderr)
+            print(f"[ERROR] Failed to decode and extract Oracle Wallet payload: {type(e).__name__} - {str(e)}", file=sys.stderr)
             sys.exit(1)
 
         # 3. Connect to Oracle Autonomous Database in Thin Mode
