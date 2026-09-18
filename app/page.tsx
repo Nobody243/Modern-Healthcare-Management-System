@@ -7,37 +7,29 @@ import {
   Stethoscope,
   Users,
   Activity,
-  ShieldCheck,
   Calendar,
   Database,
   Pill,
-  FlaskConical,
   Building2,
   Lock,
   ArrowRight,
   CheckCircle2,
   Sparkles,
-  Clock,
   Server,
   HeartPulse,
   Radio,
   Sliders,
-  Terminal,
-  ChevronRight,
   Copy,
   Check,
   Zap,
-  Layers,
-  FileText,
   AlertCircle,
-  Eye,
   Crosshair,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SplineScene } from '@/components/ui/spline';
 
 // ============================================================================
-// CINEMATIC MOUSE-AWARE SPOTLIGHT CARD CONTAINER
+// ZERO-RERENDER SPOTLIGHT CARD (CSS VARIABLE COMPOSITOR ACCELERATION)
 // ============================================================================
 function SpotlightCard({
   children,
@@ -47,32 +39,26 @@ function SpotlightCard({
   className?: string;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: -500, y: -500 });
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
   };
 
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`relative overflow-hidden rounded-2xl bg-slate-950/80 border border-slate-800/80 backdrop-blur-xl transition-all duration-300 hover:border-slate-700/90 hover:shadow-2xl hover:shadow-cyan-500/5 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl bg-slate-950/80 border border-slate-800/80 backdrop-blur-md transition-all duration-300 hover:border-slate-700/90 hover:shadow-xl hover:shadow-cyan-500/5 ${className}`}
     >
-      {/* Studio Keylight Spotlight Beam */}
+      {/* Studio Keylight Spotlight Beam (Compositor Level) */}
       <div
-        className="pointer-events-none absolute -inset-px transition-opacity duration-300 transform-gpu"
+        className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform-gpu"
         style={{
-          opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(550px circle at ${mousePos.x}px ${mousePos.y}px, rgba(56, 189, 248, 0.12), transparent 70%)`,
+          background:
+            'radial-gradient(450px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(56, 189, 248, 0.12), transparent 70%)',
         }}
       />
       {/* Subtle Metallic Top Bevel */}
@@ -83,23 +69,20 @@ function SpotlightCard({
 }
 
 // ============================================================================
-// CINEMATIC LIVE CLINICAL TELEMETRY COMMAND CENTER (MULTI-CHANNEL STREAM)
+// CINEMATIC LIVE CLINICAL TELEMETRY COMMAND CENTER
 // ============================================================================
 function CinematicTelemetryCenter() {
   const [activeChannel, setActiveChannel] = useState<'icu' | 'or' | 'oracle'>('icu');
   const [bpm, setBpm] = useState(74);
   const [spo2, setSpo2] = useState(98);
   const [bp, setBp] = useState('120/80');
-  const [pulseCount, setPulseCount] = useState(1);
   const [simMessage, setSimMessage] = useState<string | null>(null);
 
-  // Live ECG Heartbeat pulse simulation
+  // Live biological pulse variation
   useEffect(() => {
     const interval = setInterval(() => {
-      setPulseCount((prev) => prev + 1);
-      // Subtle natural biological fluctuation
-      setBpm((prev) => 72 + Math.floor(Math.sin(Date.now() / 3000) * 3));
-    }, 1800);
+      setBpm(72 + Math.floor(Math.sin(Date.now() / 2500) * 3));
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -124,7 +107,7 @@ function CinematicTelemetryCenter() {
   };
 
   return (
-    <div className="rounded-3xl bg-slate-950/90 border border-slate-800/90 shadow-[0_25px_60px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-2xl">
+    <div className="rounded-3xl bg-slate-950/90 border border-slate-800/90 shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden backdrop-blur-xl">
       {/* Studio Film HUD Header */}
       <div className="px-6 py-4 bg-slate-900/90 border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-4">
         {/* Left Status */}
@@ -196,7 +179,7 @@ function CinematicTelemetryCenter() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-5"
               >
                 {/* Patient Header */}
@@ -225,7 +208,6 @@ function CinematicTelemetryCenter() {
                 {/* 4 Biometric Metric Boxes */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-rose-500/5 rounded-full blur-xl group-hover:bg-rose-500/15 transition-all" />
                     <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                       Heart Pulse
                     </p>
@@ -236,7 +218,6 @@ function CinematicTelemetryCenter() {
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-cyan-500/5 rounded-full blur-xl group-hover:bg-cyan-500/15 transition-all" />
                     <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                       SpO2 Blood O2
                     </p>
@@ -247,7 +228,6 @@ function CinematicTelemetryCenter() {
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/5 rounded-full blur-xl group-hover:bg-indigo-500/15 transition-all" />
                     <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                       Blood Pressure
                     </p>
@@ -258,7 +238,6 @@ function CinematicTelemetryCenter() {
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-12 h-12 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/15 transition-all" />
                     <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                       Body Temp
                     </p>
@@ -281,7 +260,6 @@ function CinematicTelemetryCenter() {
 
                   {/* High-Precision ECG Waveform SVG with Film Sweep */}
                   <div className="relative h-16 w-full overflow-hidden flex items-center bg-slate-950/90 rounded-lg border border-slate-900">
-                    {/* Grid Lines */}
                     <div
                       className="absolute inset-0 opacity-15"
                       style={{
@@ -291,7 +269,6 @@ function CinematicTelemetryCenter() {
                       }}
                     />
 
-                    {/* Animated Moving Waveform */}
                     <svg
                       width="100%"
                       height="48"
@@ -312,7 +289,6 @@ function CinematicTelemetryCenter() {
                       />
                     </svg>
 
-                    {/* Laser Scanner Bar */}
                     <motion.div
                       animate={{ left: ['0%', '100%'] }}
                       transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
@@ -329,7 +305,7 @@ function CinematicTelemetryCenter() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-4"
               >
                 <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
@@ -389,7 +365,7 @@ function CinematicTelemetryCenter() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="space-y-4"
               >
                 <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
@@ -561,7 +537,7 @@ export default function HomePage() {
     setActiveNav(id);
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 80;
+      const headerOffset = 70;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -585,7 +561,6 @@ export default function HomePage() {
       title: 'Clinical Physician & Surgeon Portal',
       subtitle: 'Comprehensive diagnostic workspace, vital telemetry charting & surgical management',
       badge: 'Physician Workflows',
-      accentColor: 'text-cyan-400',
       accentBg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
       icon: Stethoscope,
       demoEmail: 'demo.doctor@curewell.com',
@@ -606,7 +581,6 @@ export default function HomePage() {
       title: 'Patient Personal Health Portal',
       subtitle: 'Self-service medical records, prescription instructions & vital telemetry tracker',
       badge: 'Patient Self-Service',
-      accentColor: 'text-emerald-400',
       accentBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
       icon: Users,
       demoEmail: 'demo.patient@curewell.com',
@@ -627,7 +601,6 @@ export default function HomePage() {
       title: 'Enterprise Hospital Operations Portal',
       subtitle: 'Hospital-wide infrastructure, pharmacy inventory control & payroll disbursal',
       badge: 'Hospital Operations',
-      accentColor: 'text-purple-400',
       accentBg: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
       icon: Building2,
       demoEmail: 'demo.admin@curewell.com',
@@ -650,31 +623,29 @@ export default function HomePage() {
   const PortalIcon = currentPortal.icon;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden scroll-smooth">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden">
       {/* Top Cinematic Film Scroll Progress Indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 z-50 origin-left"
         style={{ scaleX }}
       />
 
-      {/* Background Architectural Grid & Precision Laser Scan Lines (Zero AI Blobs) */}
+      {/* Background Architectural Grid & Precision Laser Scan Lines */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Fine Engineering Blueprint Grid */}
         <div
-          className="absolute inset-0 opacity-[0.035]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
               'linear-gradient(rgba(56, 189, 248, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.4) 1px, transparent 1px)',
             backgroundSize: '48px 48px',
           }}
         />
-        {/* Subtle Horizontal Anamorphic Lens Flare Lines */}
         <div className="absolute top-[20%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
         <div className="absolute top-[60%] left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/15 to-transparent" />
       </div>
 
       {/* FIXED PERSISTENT TOP NAVBAR */}
-      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-slate-950/90 border-b border-slate-800/80 shadow-2xl shadow-black/40">
+      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-slate-950/85 border-b border-slate-800/80 shadow-xl shadow-black/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
@@ -744,21 +715,21 @@ export default function HomePage() {
       {/* Main Content Stage */}
       <main className="relative z-10 pt-16">
         {/* ========================================================================= */}
-        {/* SCENE 01: CINEMATIC HERO (SPLIT GRID WITH 3D ROBOT & HUD TARGET OVERLAYS) */}
+        {/* SCENE 01: HERO SECTION (STABLE, SMOOTH & RESPONSIVE)                      */}
         {/* ========================================================================= */}
         <section
           id="hero"
-          className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12 lg:py-0 scroll-mt-20"
+          className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-10 lg:py-6 scroll-mt-20"
         >
-          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
-            {/* LEFT SIDE (50%): HEADLINE, SMOOTH TRANSITIONS & ACTIONS */}
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* LEFT SIDE (50%): HEADLINE & ACTIONS */}
             <div className="lg:col-span-6 space-y-6 text-left">
-              {/* Scene 01 Filmic Pill Badge */}
+              {/* Filmic Pill Badge */}
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 shadow-[0_0_20px_rgba(34,211,238,0.15)] text-xs font-semibold text-cyan-300"
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.15)] text-xs font-semibold text-cyan-300"
               >
                 <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 <span className="font-mono text-[11px] uppercase tracking-wider">
@@ -766,12 +737,12 @@ export default function HomePage() {
                 </span>
               </motion.div>
 
-              {/* Main Headline with Cinematic Typography */}
+              {/* Main Headline */}
               <motion.h1
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.8,
+                  duration: 0.6,
                   delay: 0.1,
                   ease: [0.16, 1, 0.3, 1],
                 }}
@@ -786,9 +757,9 @@ export default function HomePage() {
 
               {/* Sub-headline */}
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 className="text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed"
               >
                 An integrated platform engineered for hospital departments, clinical physicians, and
@@ -798,10 +769,10 @@ export default function HomePage() {
 
               {/* Action Buttons */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-wrap items-center gap-4 pt-2"
+                transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="flex flex-wrap items-center gap-4 pt-1"
               >
                 <Link href="/login">
                   <Button className="h-12 px-7 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/25 rounded-xl cursor-pointer flex items-center gap-2">
@@ -823,12 +794,12 @@ export default function HomePage() {
                 </a>
               </motion.div>
 
-              {/* Cinematic Trust Rail */}
+              {/* Trust Rail */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.45 }}
-                className="pt-4 grid grid-cols-2 gap-3 text-xs text-slate-400 font-medium max-w-lg"
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="pt-2 grid grid-cols-2 gap-3 text-xs text-slate-400 font-medium max-w-lg"
               >
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -849,35 +820,23 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* RIGHT SIDE (50%): 3D INTERACTIVE ROBOT WITH HUD TARGETING RETICLES */}
+            {/* RIGHT SIDE (50%): 3D SPLINE ROBOT (STABLE CONTAINER, NO JANK) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: [0, -10, 0],
-              }}
-              transition={{
-                opacity: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
-                scale: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
-                y: {
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-              className="lg:col-span-6 relative w-full h-[520px] sm:h-[600px] lg:h-[680px] flex items-center justify-center overflow-visible select-none isolate transform-gpu"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-6 relative w-full h-[480px] sm:h-[560px] lg:h-[620px] flex items-center justify-center overflow-visible select-none isolate transform-gpu"
             >
-              {/* Subtle Studio Anamorphic Horizon Flare (Zero Fuzzy Blobs) */}
+              {/* Anamorphic Horizon Line Flare */}
               <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent pointer-events-none" />
 
               {/* Floating HUD Reticles */}
-              <div className="absolute top-8 left-8 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-cyan-500/30 font-mono text-[10px] text-cyan-300">
+              <div className="absolute top-6 left-6 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-cyan-500/30 font-mono text-[10px] text-cyan-300 backdrop-blur-sm">
                 <Crosshair className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
                 <span>AI_DIAGNOSTIC_ASSIST: ACTIVE</span>
               </div>
 
-              <div className="absolute bottom-8 right-8 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 font-mono text-[10px] text-emerald-300">
+              <div className="absolute bottom-6 right-6 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 font-mono text-[10px] text-emerald-300 backdrop-blur-sm">
                 <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 <span>LATENCY: 4.2ms // 60 FPS</span>
               </div>
@@ -896,13 +855,13 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section
           id="telemetry"
-          className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
+          className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
         >
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6 }}
             className="text-center space-y-3 mb-12"
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
@@ -918,10 +877,10 @@ export default function HomePage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 35 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <CinematicTelemetryCenter />
           </motion.div>
@@ -932,13 +891,13 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section
           id="portals"
-          className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
+          className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
         >
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6 }}
             className="text-center space-y-3 mb-12"
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
@@ -955,10 +914,10 @@ export default function HomePage() {
 
           {/* Portal Selector Tabs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             className="flex justify-center mb-8"
           >
             <div className="p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex gap-1.5">
@@ -987,10 +946,10 @@ export default function HomePage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activePortalTab}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-5xl mx-auto"
             >
               <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950 border border-slate-800 shadow-2xl space-y-8">
@@ -1092,17 +1051,17 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* SCENE 04: TECHNICAL ARCHITECTURE BENTO GRID WITH SPOTLIGHT REFLECTIONS   */}
+        {/* SCENE 04: TECHNICAL ARCHITECTURE BENTO GRID                               */}
         {/* ========================================================================= */}
         <section
           id="architecture"
-          className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
+          className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
         >
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6 }}
             className="text-center space-y-3 mb-14"
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
@@ -1120,10 +1079,10 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Bento Card 1: Oracle Database */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.05 }}
             >
               <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
                 <div className="space-y-4">
@@ -1144,10 +1103,10 @@ export default function HomePage() {
 
             {/* Bento Card 2: Vital Telemetry */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.1 }}
             >
               <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
                 <div className="space-y-4">
@@ -1168,10 +1127,10 @@ export default function HomePage() {
 
             {/* Bento Card 3: Pharmacy & Asset Tracking */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.15 }}
             >
               <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
                 <div className="space-y-4">
@@ -1192,10 +1151,10 @@ export default function HomePage() {
 
             {/* Bento Card 4: Security & Session Isolation */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.2 }}
               id="security"
               className="scroll-mt-20"
             >
@@ -1222,14 +1181,13 @@ export default function HomePage() {
         {/* SCENE 05: CINEMATIC CALL TO ACTION BANNER                                 */}
         {/* ========================================================================= */}
         <motion.section
-          initial={{ opacity: 0, y: 35 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.7 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.6 }}
           className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900"
         >
           <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950 border border-cyan-500/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-            {/* Anamorphic Line Accent */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
 
             <div className="space-y-2 text-center md:text-left">

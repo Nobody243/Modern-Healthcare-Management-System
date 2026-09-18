@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, lazy, useState, useCallback, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
@@ -16,12 +16,16 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
   const splineAppRef = useRef<any>(null);
   const rafRef = useRef<number | null>(null);
 
-  // Smooth mouse coordinates for 3D container tilt parallax
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  // Zero React-rerender motion values for ultra-smooth 60fps 3D parallax tilt
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { stiffness: 100, damping: 24, mass: 0.3 };
+  const rotateX = useSpring(useTransform(mouseY, [-1, 1], [5, -5]), springConfig);
+  const rotateY = useSpring(useTransform(mouseX, [-1, 1], [-5, 5]), springConfig);
 
   const handleLoad = useCallback((splineApp: any) => {
     splineAppRef.current = splineApp;
-    // Slight frame delay to ensure WebGL textures are uploaded before fading in
     requestAnimationFrame(() => {
       setIsLoaded(true);
     });
@@ -36,12 +40,12 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
     }
   }, []);
 
-  // Global window pointer tracking with requestAnimationFrame throttling
+  // Window pointer tracking with rAF throttling (Directly updates MotionValues, 0 React re-renders)
   useEffect(() => {
     let pendingEvent: MouseEvent | null = null;
 
     const processPointer = () => {
-      if (!pendingEvent || !containerRef.current) {
+      if (!pendingEvent) {
         rafRef.current = null;
         return;
       }
@@ -49,34 +53,37 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
       const e = pendingEvent;
       pendingEvent = null;
 
-      // Calculate normalized viewport offset [-1, 1] for smooth interactive tilt
+      // Update normalized motion values [-1, 1] without re-rendering React component
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       const normY = (e.clientY / window.innerHeight) * 2 - 1;
-      setMousePos({ x: normX, y: normY });
+      mouseX.set(normX);
+      mouseY.set(normY);
 
-      // Forward event to Spline canvas if mouse is outside canvas bounds
-      const canvas = containerRef.current.querySelector('canvas');
-      if (canvas) {
-        const rect = canvas.getBoundingClientRect();
-        const isDirectlyOver =
-          e.clientX >= rect.left &&
-          e.clientX <= rect.right &&
-          e.clientY >= rect.top &&
-          e.clientY <= rect.bottom;
+      // Forward event to Spline canvas if pointer is outside canvas bounds
+      if (containerRef.current) {
+        const canvas = containerRef.current.querySelector('canvas');
+        if (canvas) {
+          const rect = canvas.getBoundingClientRect();
+          const isDirectlyOver =
+            e.clientX >= rect.left &&
+            e.clientX <= rect.right &&
+            e.clientY >= rect.top &&
+            e.clientY <= rect.bottom;
 
-        if (!isDirectlyOver) {
-          const syntheticPointer = new PointerEvent('pointermove', {
-            clientX: e.clientX,
-            clientY: e.clientY,
-            screenX: e.screenX,
-            screenY: e.screenY,
-            bubbles: false, // Prevent bubbling to window to avoid duplicate triggers
-            cancelable: true,
-            pointerId: 1,
-            pointerType: 'mouse',
-            isPrimary: true,
-          });
-          canvas.dispatchEvent(syntheticPointer);
+          if (!isDirectlyOver) {
+            const syntheticPointer = new PointerEvent('pointermove', {
+              clientX: e.clientX,
+              clientY: e.clientY,
+              screenX: e.screenX,
+              screenY: e.screenY,
+              bubbles: false,
+              cancelable: true,
+              pointerId: 1,
+              pointerType: 'mouse',
+              isPrimary: true,
+            });
+            canvas.dispatchEvent(syntheticPointer);
+          }
         }
       }
 
@@ -98,23 +105,18 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, []);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.div
       ref={containerRef}
-      animate={{
-        rotateY: mousePos.x * 6,
-        rotateX: -mousePos.y * 6,
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1200,
       }}
-      transition={{
-        type: 'spring',
-        stiffness: 120,
-        damping: 20,
-        mass: 0.5,
-      }}
-      style={{ transformStyle: 'preserve-3d', perspective: 1200 }}
-      className="relative w-full h-full flex items-center justify-center overflow-visible select-none isolate"
+      className="relative w-full h-full flex items-center justify-center overflow-visible select-none isolate will-change-transform transform-gpu"
     >
       {/* Loading Skeleton */}
       {!isLoaded && (
@@ -131,7 +133,7 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
 
       {/* Spline Canvas */}
       <div
-        className={`w-full h-full transition-all duration-700 ease-out transform-gpu ${
+        className={`w-full h-full transition-all duration-500 ease-out transform-gpu ${
           isLoaded
             ? 'opacity-100 scale-100 blur-0'
             : 'opacity-0 scale-95 blur-sm pointer-events-none'
@@ -148,4 +150,3 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
     </motion.div>
   );
 }
-
