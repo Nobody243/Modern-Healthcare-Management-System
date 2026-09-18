@@ -130,31 +130,28 @@ function CinematicTelemetryCenter() {
         <div className="flex items-center p-1 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
           <button
             onClick={() => setActiveChannel('icu')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'icu'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'icu'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             CH 01: CARDIAC ICU
           </button>
           <button
             onClick={() => setActiveChannel('or')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'or'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'or'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             CH 02: OR SUITE 2
           </button>
           <button
             onClick={() => setActiveChannel('oracle')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'oracle'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'oracle'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-            }`}
+              }`}
           >
             CH 03: ORACLE 19c
           </button>
@@ -678,9 +675,8 @@ export default function HomePage() {
                 key={navItem.id}
                 href={`#${navItem.id}`}
                 onClick={(e) => scrollToSection(e, navItem.id)}
-                className={`relative px-4 py-1.5 rounded-full transition-colors cursor-pointer ${
-                  activeNav === navItem.id ? 'text-white' : 'hover:text-slate-200'
-                }`}
+                className={`relative px-4 py-1.5 rounded-full transition-colors cursor-pointer ${activeNav === navItem.id ? 'text-white' : 'hover:text-slate-200'
+                  }`}
               >
                 {activeNav === navItem.id && (
                   <motion.div
@@ -928,11 +924,10 @@ export default function HomePage() {
                   <button
                     key={tab}
                     onClick={() => setActivePortalTab(tab)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                      isActive
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${isActive
                         ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-lg shadow-cyan-500/25'
                         : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="capitalize">{tab} Portal</span>
@@ -1115,8 +1110,7 @@ export default function HomePage() {
                   </div>
                   <h3 className="text-base font-bold text-white">Continuous Vital Telemetry</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Tracks heart pulse, blood pressure, respiration, body temp, and oxygen saturation with
-                    automated normal range validation.
+                    Tracks pulse, blood pressure, respiration, body temp, and oxygen saturation with automated range validation.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-rose-400 font-semibold">
