@@ -1,0 +1,38 @@
+name: Oracle Autonomous DB Keep-Alive
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every 3 days (well below Oracle's 7-day inactivity threshold)
+    - cron: '0 0 */3 * *'
+  workflow_dispatch:
+    # Allows manual trigger from GitHub Actions UI for testing and validation
+
+jobs:
+  keep-alive:
+    name: Execute Keep-Alive Query
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install database driver
+        run: |
+          python -m pip install --upgrade pip
+          pip install oracledb
+
+      - name: Run keep-alive ping
+        env:
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+          ORACLE_PASSWORD: ${{ secrets.ORACLE_PASSWORD }}
+          ORACLE_WALLET_BASE64: ${{ secrets.ORACLE_WALLET_BASE64 }}
+          ORACLE_WALLET_PASSWORD: ${{ secrets.ORACLE_WALLET_PASSWORD }}
+          ORACLE_TNS_NAME: ${{ secrets.ORACLE_TNS_NAME }}
+        run: python keep_alive.py
