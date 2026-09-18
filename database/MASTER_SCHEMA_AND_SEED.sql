@@ -3,6 +3,10 @@
 -- MASTER DATABASE SCHEMA & SEED SCRIPT FOR ORACLE CLOUD
 -- Target: Oracle Autonomous Database (Always Free / Cloud)
 -- Standard: 3NF Relational Architecture & Cloud-Optimized
+-- Contains: Complete Tables, Sequences, 3NF Views, Indexes,
+--           All 20+ Patients, 10+ Doctors, 15+ Vendors, 15+ Pharma,
+--           Accounts, Assets, Equipment, Labs, Records, Payrolls,
+--           Prescriptions, Surgeries, Vitals, Users & Full Demo Accounts.
 --------------------------------------------------------
 
 -- =====================================================
@@ -251,20 +255,19 @@ END;
 /
 
 -- -----------------------------------------------------
--- TABLE 7: HIS_ACCOUNTS (Ledgers & Banking)
+-- TABLE 7: HIS_ACCOUNTS (General Ledger & Balances)
 -- -----------------------------------------------------
 CREATE TABLE HIS_ACCOUNTS (
     ACC_ID NUMBER PRIMARY KEY,
     ACC_NAME VARCHAR2(200) NOT NULL,
     ACC_DESC VARCHAR2(1000),
-    ACC_TYPE VARCHAR2(100),
+    ACC_TYPE VARCHAR2(200) NOT NULL,
     ACC_NUMBER VARCHAR2(200) NOT NULL UNIQUE,
-    ACC_AMOUNT NUMBER(15,2) DEFAULT 0,
+    ACC_AMOUNT NUMBER(14,2) DEFAULT 0.00,
     ACC_CURRENCY VARCHAR2(10) DEFAULT 'USD',
     CREATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     UPDATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
-    CONSTRAINT CHK_ACC_TYPE CHECK (ACC_TYPE IN ('Payable Account', 'Receivable Account', 'Asset Account', 'Liability Account', 'Equity Account')),
-    CONSTRAINT CHK_ACC_CURRENCY CHECK (ACC_CURRENCY IN ('USD', 'EUR', 'GBP', 'INR'))
+    CONSTRAINT CHK_ACC_TYPE CHECK (ACC_TYPE IN ('Payable Account', 'Receivable Account', 'Asset Account', 'Expense Account', 'Equity Account', 'Liability Account'))
 );
 
 CREATE OR REPLACE TRIGGER HIS_ACCOUNTS_TRG
@@ -288,13 +291,13 @@ CREATE TABLE HIS_ASSETS (
     ASST_STATUS VARCHAR2(50) DEFAULT 'Active',
     ASST_DEPT VARCHAR2(200),
     ASST_PURCHASE_DATE DATE,
-    ASST_PURCHASE_COST NUMBER(12,2),
+    ASST_PURCHASE_COST NUMBER(14,2),
     ASST_SERIAL_NUMBER VARCHAR2(200) UNIQUE,
     CREATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     UPDATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT FK_ASST_VENDOR FOREIGN KEY (ASST_VENDOR) 
         REFERENCES HIS_VENDOR(V_NAME) ON DELETE SET NULL,
-    CONSTRAINT CHK_ASST_STATUS CHECK (ASST_STATUS IN ('Active', 'Maintenance', 'Retired', 'Broken')),
+    CONSTRAINT CHK_ASST_STATUS CHECK (ASST_STATUS IN ('Active', 'Under Maintenance', 'Decommissioned', 'Disposed')),
     CONSTRAINT CHK_ASST_COST CHECK (ASST_PURCHASE_COST >= 0)
 );
 
@@ -309,23 +312,23 @@ END;
 /
 
 -- -----------------------------------------------------
--- TABLE 9: HIS_EQUIPMENTS (Biomedical Equipment)
+-- TABLE 9: HIS_EQUIPMENTS (Biomedical & Clinical Equipment)
 -- -----------------------------------------------------
 CREATE TABLE HIS_EQUIPMENTS (
     EQP_ID NUMBER PRIMARY KEY,
-    EQP_CODE VARCHAR2(200) UNIQUE,
+    EQP_CODE VARCHAR2(200) NOT NULL UNIQUE,
     EQP_NAME VARCHAR2(200) NOT NULL,
     EQP_VENDOR VARCHAR2(200),
     EQP_DESC VARCHAR2(1000),
     EQP_DEPT VARCHAR2(200),
     EQP_STATUS VARCHAR2(50) DEFAULT 'Functioning',
-    EQP_QTY NUMBER DEFAULT 0,
+    EQP_QTY NUMBER DEFAULT 1,
     EQP_LOCATION VARCHAR2(200),
     CREATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     UPDATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT FK_EQP_VENDOR FOREIGN KEY (EQP_VENDOR) 
         REFERENCES HIS_VENDOR(V_NAME) ON DELETE SET NULL,
-    CONSTRAINT CHK_EQP_STATUS CHECK (EQP_STATUS IN ('Functioning', 'Under Repair', 'Out of Service', 'Reserved')),
+    CONSTRAINT CHK_EQP_STATUS CHECK (EQP_STATUS IN ('Functioning', 'Defective', 'Under Repair', 'Decommissioned')),
     CONSTRAINT CHK_EQP_QTY CHECK (EQP_QTY >= 0)
 );
 
@@ -340,7 +343,7 @@ END;
 /
 
 -- -----------------------------------------------------
--- TABLE 10: HIS_LABORATORY (Laboratory Diagnostic Tests)
+-- TABLE 10: HIS_LABORATORY (Diagnostic Orders & Pathology)
 -- -----------------------------------------------------
 CREATE TABLE HIS_LABORATORY (
     LAB_ID NUMBER PRIMARY KEY,
@@ -349,8 +352,8 @@ CREATE TABLE HIS_LABORATORY (
     LAB_DOC_NUMBER VARCHAR2(200),
     LAB_PAT_TESTS VARCHAR2(1000),
     LAB_PAT_RESULTS VARCHAR2(4000),
-    LAB_STATUS VARCHAR2(50) DEFAULT 'Pending',
     LAB_DATE_REC TIMESTAMP DEFAULT SYSTIMESTAMP,
+    LAB_STATUS VARCHAR2(50) DEFAULT 'Pending',
     LAB_COMPLETED_DATE TIMESTAMP,
     CREATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
     UPDATED_AT TIMESTAMP DEFAULT SYSTIMESTAMP,
@@ -372,7 +375,7 @@ END;
 /
 
 -- -----------------------------------------------------
--- TABLE 11: HIS_MEDICAL_RECORDS (Patient Clinical History)
+-- TABLE 11: HIS_MEDICAL_RECORDS (Clinical Encounters & Notes)
 -- -----------------------------------------------------
 CREATE TABLE HIS_MEDICAL_RECORDS (
     MDR_ID NUMBER PRIMARY KEY,
@@ -905,7 +908,7 @@ INNER JOIN HIS_PATIENTS p ON d.DOC_NUMBER = p.PAT_ASSIGNED_DOC
 WHERE d.DOC_STATUS = 'Active';
 
 -- =====================================================
--- SECTION 6: POPULATE MASTER SEED DATA
+-- SECTION 6: POPULATE MASTER SEED DATA (COMPLETE DATASET)
 -- =====================================================
 
 -- Roles
@@ -922,11 +925,15 @@ INSERT INTO HIS_PRIVILEGES (PRIV_NAME, PRIV_DESC, PRIV_MODULE) VALUES ('doctor.o
 INSERT INTO HIS_PRIVILEGES (PRIV_NAME, PRIV_DESC, PRIV_MODULE) VALUES ('patient.view_prescriptions', 'View active prescriptions and refills', 'Prescriptions');
 INSERT INTO HIS_PRIVILEGES (PRIV_NAME, PRIV_DESC, PRIV_MODULE) VALUES ('patient.view_vitals', 'View biometric charts', 'Vitals');
 
--- Admin Account
-INSERT INTO HIS_ADMIN (AD_FNAME, AD_LNAME, AD_EMAIL, AD_PWD) VALUES
-('System', 'Administrator', 'admin@curewell.com', 'admin');
+-- -----------------------------------------------------
+-- ADMIN ACCOUNTS (BOTH STANDARD & DEMO PORTAL LOGINS)
+-- -----------------------------------------------------
+INSERT INTO HIS_ADMIN (AD_FNAME, AD_LNAME, AD_EMAIL, AD_PWD) VALUES ('System', 'Administrator', 'admin@curewell.com', 'admin');
+INSERT INTO HIS_ADMIN (AD_FNAME, AD_LNAME, AD_EMAIL, AD_PWD) VALUES ('Hospital', 'Admin', 'demo.admin@curewell.com', 'demo123');
 
--- Vendors
+-- -----------------------------------------------------
+-- VENDORS (15 COMPLETE VENDORS)
+-- -----------------------------------------------------
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND001', 'MediSupply Corp', '123 Medical Plaza, New York, NY 10001', '+1-212-555-0100', 'contact@medisupply.com');
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND002', 'PharmaCare International', '456 Pharmacy Ave, Los Angeles, CA 90001', '+1-310-555-0200', 'sales@pharmacare.com');
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND003', 'HealthTech Solutions', '789 Innovation Dr, Boston, MA 02101', '+1-617-555-0300', 'info@healthtech.com');
@@ -934,10 +941,20 @@ INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND0
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND005', 'Surgical Equipment Inc', '654 Industry Blvd, Houston, TX 77001', '+1-713-555-0500', 'sales@surgequip.com');
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND006', 'BioLab Diagnostics', '987 Research Pkwy, San Francisco, CA 94101', '+1-415-555-0600', 'contact@biolabdx.com');
 INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND007', 'CardioMed Devices', '147 Heart Lane, Seattle, WA 98101', '+1-206-555-0700', 'support@cardiomed.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND008', 'OrthoTech Implants', '258 Bone Way, Atlanta, GA 30301', '+1-404-555-0800', 'sales@orthotech.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND009', 'NeuroCare Systems', '369 Brain Blvd, Philadelphia, PA 19101', '+1-215-555-0900', 'info@neurocare.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND010', 'Visionary Medical Imaging', '741 Sight St, Miami, FL 33101', '+1-305-555-1000', 'orders@visionmed.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND011', 'Emergency Care Logistics', '852 Rescue Rd, Dallas, TX 75201', '+1-214-555-1100', 'dispatch@emergencylog.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND012', 'PediaCare Supplies', '963 Kids Court, Denver, CO 80201', '+1-303-555-1200', 'support@pediacare.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND013', 'OncoTech Therapeutics', '159 Hope Ave, San Diego, CA 92101', '+1-619-555-1300', 'clinical@oncotech.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND014', 'DentalPro Equipment', '357 Smile Way, Phoenix, AZ 85001', '+1-602-555-1400', 'sales@dentalpro.com');
+INSERT INTO HIS_VENDOR (V_NUMBER, V_NAME, V_ADR, V_PHONE, V_EMAIL) VALUES ('VND015', 'Wellness Pharmaceuticals', '468 Health Blvd, Minneapolis, MN 55401', '+1-612-555-1500', 'info@wellnesspharm.com');
 
--- Doctors (Including DOC-DEMO)
+-- -----------------------------------------------------
+-- DOCTORS (11 COMPLETE DOCTORS INCLUDING DOC-DEMO)
+-- -----------------------------------------------------
 INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
-('DOC-DEMO', 'Alexander', 'Hayes', 'doctor@curewell.com', 'doctor', 'Cardiology & Internal Medicine', 'Senior Consultant Cardiologist & Physician', '+1 (555) 432-8890', 'Active');
+('DOC-DEMO', 'Alexander', 'Hayes', 'demo.doctor@curewell.com', 'demo123', 'Cardiology & Internal Medicine', 'Senior Consultant Cardiologist & Physician', '+1 (555) 432-8890', 'Active');
 INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
 ('DOC001', 'Sarah', 'Jenkins', 's.jenkins@curewell.com', 'doctor', 'Cardiology', 'Interventional Cardiology', '+1-555-0101', 'Active');
 INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
@@ -948,8 +965,20 @@ INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_
 ('DOC004', 'David', 'Kim', 'd.kim@curewell.com', 'doctor', 'Orthopedics', 'Reconstructive Joint Surgery', '+1-555-0104', 'Active');
 INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
 ('DOC005', 'Rachel', 'Patel', 'r.patel@curewell.com', 'doctor', 'Oncology', 'Surgical Oncology', '+1-555-0105', 'Active');
+INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
+('DOC006', 'Robert', 'Taylor', 'r.taylor@curewell.com', 'doctor', 'Dermatology', 'Dermatopathology', '+1-555-0106', 'Active');
+INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
+('DOC007', 'Lisa', 'Anderson', 'l.anderson@curewell.com', 'doctor', 'Gastroenterology', 'Hepatology & Endoscopy', '+1-555-0107', 'Active');
+INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
+('DOC008', 'James', 'Wilson', 'j.wilson@curewell.com', 'doctor', 'Pulmonology', 'Critical Care Medicine', '+1-555-0108', 'Active');
+INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
+('DOC009', 'Amanda', 'Thomas', 'a.thomas@curewell.com', 'doctor', 'Psychiatry', 'Neuropsychiatry', '+1-555-0109', 'Active');
+INSERT INTO HIS_DOCS (DOC_NUMBER, DOC_FNAME, DOC_LNAME, DOC_EMAIL, DOC_PWD, DOC_DEPT, DOC_SPECIALIZATION, DOC_PHONE, DOC_STATUS) VALUES
+('DOC010', 'Christopher', 'Martinez', 'c.martinez@curewell.com', 'doctor', 'Urology', 'Urologic Oncology', '+1-555-0110', 'Active');
 
--- Patients (Including PAT-DEMO and Doctor Demo Cohort)
+-- -----------------------------------------------------
+-- PATIENTS (26 COMPLETE PATIENTS: PAT-DEMO, PAT-DEMO-001..005, PAT001..PAT020)
+-- -----------------------------------------------------
 INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_DISCHARGE_STATUS, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
 ('PAT-DEMO', 'Alex', 'Morgan', TO_DATE('1990-05-15', 'YYYY-MM-DD'), 34, '742 Evergreen Terrace, Springfield, IL 62704', '+1 (555) 839-2041', 'demo.patient@curewell.com', 'InPatient', 'DOC-DEMO', 'Hypertensive Heart Disease & Exertional Angina', 'Admitted', 'Male', 'O+', 'Sarah Morgan (Spouse) - +1 (555) 839-2042');
 INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_DISCHARGE_STATUS, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
@@ -963,13 +992,69 @@ INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PA
 INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_DISCHARGE_STATUS, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
 ('PAT-DEMO-005', 'Aaliyah', 'Patel', TO_DATE('1986-09-12', 'YYYY-MM-DD'), 38, '412 North Michigan Ave, Chicago, IL 60611', '+1 (555) 712-4405', 'aaliyah.patel@curewell-demo.com', 'OutPatient', 'DOC-DEMO', 'Refractory Migraine with Visual Aura', 'Active', 'Female', 'A-', 'Rohan Patel (Spouse) - +1 (555) 712-4495');
 
--- Pharmaceutical Categories
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT001', 'John', 'Doe', TO_DATE('1985-03-15', 'YYYY-MM-DD'), 39, '123 Main St, Springfield, IL 62701', '+1-555-3001', 'john.doe@email.com', 'InPatient', 'DOC001', 'Coronary Artery Disease', 'Male', 'O+', '+1-555-3901');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT002', 'Jane', 'Smith', TO_DATE('1990-07-22', 'YYYY-MM-DD'), 34, '456 Oak Ave, Naperville, IL 60540', '+1-555-3002', 'jane.smith@email.com', 'OutPatient', 'DOC002', 'Migraine with Aura', 'Female', 'A+', '+1-555-3902');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT003', 'William', 'Johnson', TO_DATE('2015-11-08', 'YYYY-MM-DD'), 9, '789 Pine Rd, Rockford, IL 61101', '+1-555-3003', 'parent.johnson@email.com', 'OutPatient', 'DOC003', 'Asthma (Pediatric)', 'Male', 'B+', '+1-555-3903');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT004', 'Mary', 'Williams', TO_DATE('1958-09-30', 'YYYY-MM-DD'), 66, '321 Elm St, Peoria, IL 61602', '+1-555-3004', 'mary.williams@email.com', 'InPatient', 'DOC004', 'Osteoarthritis Right Knee', 'Female', 'AB+', '+1-555-3904');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT005', 'James', 'Brown', TO_DATE('1972-01-18', 'YYYY-MM-DD'), 52, '654 Maple Dr, Aurora, IL 60505', '+1-555-3005', 'james.brown@email.com', 'InPatient', 'DOC005', 'Colon Cancer Stage II', 'Male', 'O-', '+1-555-3905');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT006', 'Patricia', 'Jones', TO_DATE('1988-06-25', 'YYYY-MM-DD'), 36, '987 Cedar Ln, Joliet, IL 60435', '+1-555-3006', 'patricia.jones@email.com', 'OutPatient', 'DOC006', 'Psoriasis Vulgaris', 'Female', 'A-', '+1-555-3906');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT007', 'Robert', 'Garcia', TO_DATE('1965-12-03', 'YYYY-MM-DD'), 59, '147 Birch Blvd, Elgin, IL 60120', '+1-555-3007', 'robert.garcia@email.com', 'InPatient', 'DOC007', 'Crohns Disease', 'Male', 'B-', '+1-555-3907');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT008', 'Jennifer', 'Miller', TO_DATE('1979-04-14', 'YYYY-MM-DD'), 45, '258 Walnut St, Waukegan, IL 60085', '+1-555-3008', 'jennifer.miller@email.com', 'OutPatient', 'DOC008', 'Chronic Bronchitis', 'Female', 'O+', '+1-555-3908');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT009', 'Michael', 'Davis', TO_DATE('1993-08-09', 'YYYY-MM-DD'), 31, '369 Spruce Ave, Cicero, IL 60804', '+1-555-3009', 'michael.davis@email.com', 'OutPatient', 'DOC009', 'Major Depressive Disorder', 'Male', 'A+', '+1-555-3909');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT010', 'Linda', 'Rodriguez', TO_DATE('1961-05-27', 'YYYY-MM-DD'), 63, '741 Ash Court, Champaign, IL 61820', '+1-555-3010', 'linda.rodriguez@email.com', 'InPatient', 'DOC010', 'Kidney Stones (Nephrolithiasis)', 'Female', 'AB-', '+1-555-3910');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT011', 'David', 'Martinez', TO_DATE('1975-11-11', 'YYYY-MM-DD'), 49, '852 Willow Way, Bloomington, IL 61701', '+1-555-3011', 'david.martinez@email.com', 'InPatient', 'DOC001', 'Heart Failure (NYHA Class II)', 'Male', 'O+', '+1-555-3911');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT012', 'Barbara', 'Hernandez', TO_DATE('1983-02-19', 'YYYY-MM-DD'), 41, '963 Hickory Lane, Decatur, IL 62521', '+1-555-3012', 'barbara.hernandez@email.com', 'OutPatient', 'DOC002', 'Epilepsy', 'Female', 'A-', '+1-555-3912');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT013', 'Thomas', 'Lopez', TO_DATE('1998-10-05', 'YYYY-MM-DD'), 26, '159 Poplar Blvd, Evanston, IL 60201', '+1-555-3013', 'thomas.lopez@email.com', 'InPatient', 'DOC004', 'Anterior Cruciate Ligament Tear', 'Male', 'B+', '+1-555-3913');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT014', 'Susan', 'Gonzalez', TO_DATE('1970-08-31', 'YYYY-MM-DD'), 54, '357 Magnolia Dr, Schaumburg, IL 60173', '+1-555-3014', 'susan.gonzalez@email.com', 'OutPatient', 'DOC005', 'Breast Cancer Stage I', 'Female', 'O-', '+1-555-3914');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT015', 'Christopher', 'Wilson', TO_DATE('1991-01-24', 'YYYY-MM-DD'), 33, '468 Cypress Rd, Bolingbrook, IL 60440', '+1-555-3015', 'christopher.wilson@email.com', 'OutPatient', 'DOC006', 'Atopic Dermatitis', 'Male', 'A+', '+1-555-3915');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT016', 'Jessica', 'Anderson', TO_DATE('1986-07-07', 'YYYY-MM-DD'), 38, '579 Alder St, Palatine, IL 60067', '+1-555-3016', 'jessica.anderson@email.com', 'InPatient', 'DOC007', 'Ulcerative Colitis', 'Female', 'B-', '+1-555-3916');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT017', 'Daniel', 'Thomas', TO_DATE('1952-03-12', 'YYYY-MM-DD'), 72, '680 Beech Ave, Skokie, IL 60076', '+1-555-3017', 'daniel.thomas@email.com', 'InPatient', 'DOC008', 'COPD with Exacerbation', 'Male', 'AB+', '+1-555-3917');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT018', 'Sarah', 'Taylor', TO_DATE('1995-12-19', 'YYYY-MM-DD'), 28, '791 Chestnut Dr, Des Plaines, IL 60016', '+1-555-3018', 'sarah.taylor@email.com', 'OutPatient', 'DOC009', 'Generalized Anxiety Disorder', 'Female', 'O+', '+1-555-3918');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT019', 'Matthew', 'Moore', TO_DATE('1967-09-02', 'YYYY-MM-DD'), 57, '802 Sycamore Way, Orland Park, IL 60462', '+1-555-3019', 'matthew.moore@email.com', 'InPatient', 'DOC010', 'Benign Prostatic Hyperplasia', 'Male', 'A-', '+1-555-3919');
+INSERT INTO HIS_PATIENTS (PAT_NUMBER, PAT_FNAME, PAT_LNAME, PAT_DOB, PAT_AGE, PAT_ADDR, PAT_PHONE, PAT_EMAIL, PAT_TYPE, PAT_ASSIGNED_DOC, PAT_AILMENT, PAT_GENDER, PAT_BLOOD_GROUP, PAT_EMERGENCY_CONTACT) VALUES
+('PAT020', 'Karen', 'Jackson', TO_DATE('1981-04-28', 'YYYY-MM-DD'), 43, '913 Redwood Ln, Tinley Park, IL 60477', '+1-555-3020', 'karen.jackson@email.com', 'InPatient', 'DOC001', 'Atrial Fibrillation', 'Female', 'O+', '+1-555-3920');
+
+-- -----------------------------------------------------
+-- PHARMACEUTICAL CATEGORIES (15 CATEGORIES)
+-- -----------------------------------------------------
 INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Antibiotics', 'PharmaCare International', 'Broad and narrow spectrum antibacterial agents');
 INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Cardiovascular', 'CardioMed Devices', 'Beta blockers, ACE inhibitors, and antiarrhythmics');
 INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Analgesics', 'MediSupply Corp', 'Non-opioid and opioid pain management formulations');
 INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Endocrine & Metabolic', 'PharmaCare International', 'Insulin regimens and oral glycemic regulators');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Respiratory', 'HealthTech Solutions', 'Bronchodilators, inhaled corticosteroids, and antihistamines');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Gastrointestinal', 'Wellness Pharmaceuticals', 'Proton pump inhibitors, H2 blockers, and antacids');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Anticoagulants', 'MediSupply Corp', 'Blood thinners, direct thrombin inhibitors, and antiplatelets');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Psychiatric', 'PharmaCare International', 'Antidepressants, anxiolytics, and antipsychotics');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Vitamins & Minerals', 'Wellness Pharmaceuticals', 'Dietary supplements and parenteral nutritional additives');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Antivirals', 'MediSupply Corp', 'Therapeutic agents against viral pathogens');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Hormones', 'Wellness Pharmaceuticals', 'Thyroid replacements, corticosteroids, and hormone therapy');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Antidiabetics', 'Wellness Pharmaceuticals', 'Oral hypoglycemic agents and glucagon formulations');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Antihypertensives', 'MediSupply Corp', 'Blood pressure management regimens');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Antidepressants', 'PharmaCare International', 'Selective serotonin reuptake inhibitors and tricyclics');
+INSERT INTO HIS_PHARMACEUTICALS_CATEGORIES (PHARM_CAT_NAME, PHARM_CAT_VENDOR, PHARM_CAT_DESC) VALUES ('Oncology Agents', 'OncoTech Therapeutics', 'Targeted antineoplastic and cytotoxic medications');
 
--- Pharmaceuticals
+-- -----------------------------------------------------
+-- PHARMACEUTICALS (15 ITEMS)
+-- -----------------------------------------------------
 INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
 ('Atorvastatin 20mg', 'MED-BC-101', 'HMG-CoA reductase inhibitor for lipid management', 450, 14.50, 'Cardiovascular', 'PharmaCare International', TO_DATE('2027-12-31', 'YYYY-MM-DD'), TO_DATE('2024-01-15', 'YYYY-MM-DD'));
 INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
@@ -978,67 +1063,241 @@ INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHA
 ('Amoxicillin Clavulanate 875mg', 'MED-BC-103', 'Potentiated penicillin antibiotic', 320, 22.00, 'Antibiotics', 'PharmaCare International', TO_DATE('2026-11-30', 'YYYY-MM-DD'), TO_DATE('2024-05-01', 'YYYY-MM-DD'));
 INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
 ('Metformin HCl 1000mg ER', 'MED-BC-104', 'Biguanide antihyperglycemic oral agent', 850, 11.00, 'Endocrine & Metabolic', 'PharmaCare International', TO_DATE('2028-04-30', 'YYYY-MM-DD'), TO_DATE('2024-02-20', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Ibuprofen 400mg', 'MED-BC-105', 'Non-steroidal anti-inflammatory oral tablet', 5000, 0.15, 'Analgesics', 'PharmaCare International', TO_DATE('2026-12-31', 'YYYY-MM-DD'), TO_DATE('2024-01-15', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Lisinopril 10mg', 'MED-BC-106', 'Angiotensin-converting enzyme inhibitor', 3800, 0.22, 'Antihypertensives', 'MediSupply Corp', TO_DATE('2026-06-15', 'YYYY-MM-DD'), TO_DATE('2024-01-10', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Albuterol Inhaler 90mcg', 'MED-BC-107', 'Short-acting beta2-adrenergic bronchodilator', 2500, 8.50, 'Respiratory', 'PharmaCare International', TO_DATE('2026-09-30', 'YYYY-MM-DD'), TO_DATE('2024-03-01', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Omeprazole 20mg DR', 'MED-BC-108', 'Proton pump inhibitor for acid suppression', 3500, 0.35, 'Gastrointestinal', 'Wellness Pharmaceuticals', TO_DATE('2026-11-20', 'YYYY-MM-DD'), TO_DATE('2024-02-10', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Warfarin Sodium 5mg', 'MED-BC-109', 'Vitamin K antagonist oral anticoagulant', 2000, 0.40, 'Anticoagulants', 'MediSupply Corp', TO_DATE('2027-01-31', 'YYYY-MM-DD'), TO_DATE('2024-04-01', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Sertraline HCl 50mg', 'MED-BC-110', 'Selective serotonin reuptake inhibitor', 3200, 0.45, 'Antidepressants', 'PharmaCare International', TO_DATE('2026-10-15', 'YYYY-MM-DD'), TO_DATE('2024-01-20', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Vitamin D3 1000IU', 'MED-BC-111', 'Cholecalciferol dietary supplement capsule', 7000, 0.08, 'Vitamins & Minerals', 'Wellness Pharmaceuticals', TO_DATE('2027-06-30', 'YYYY-MM-DD'), TO_DATE('2024-03-10', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Azithromycin 250mg', 'MED-BC-112', 'Macrolide antibacterial oral tablet', 2800, 0.55, 'Antibiotics', 'PharmaCare International', TO_DATE('2026-07-31', 'YYYY-MM-DD'), TO_DATE('2024-02-05', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Oseltamivir 75mg', 'MED-BC-113', 'Neuraminidase inhibitor antiviral capsule', 1500, 3.20, 'Antivirals', 'MediSupply Corp', TO_DATE('2026-04-30', 'YYYY-MM-DD'), TO_DATE('2024-01-25', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Levothyroxine 50mcg', 'MED-BC-114', 'Synthetic thyroid hormone replacement', 4200, 0.20, 'Hormones', 'Wellness Pharmaceuticals', TO_DATE('2027-02-28', 'YYYY-MM-DD'), TO_DATE('2024-03-05', 'YYYY-MM-DD'));
+INSERT INTO HIS_PHARMACEUTICALS (PHAR_NAME, PHAR_BCODE, PHAR_DESC, PHAR_QTY, PHAR_UNIT_PRICE, PHAR_CAT, PHAR_VENDOR, PHAR_EXPIRY_DATE, PHAR_MANUFACTURING_DATE) VALUES
+('Aspirin 81mg EC', 'MED-BC-115', 'Enteric-coated cardioprotective antiplatelet', 8000, 0.05, 'Cardiovascular', 'PharmaCare International', TO_DATE('2028-12-31', 'YYYY-MM-DD'), TO_DATE('2024-04-10', 'YYYY-MM-DD'));
 
--- Accounts
+-- -----------------------------------------------------
+-- ACCOUNTS (15 COMPLETE ACCOUNTS)
+-- -----------------------------------------------------
 INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Primary Clinical Operating Account', 'General hospital operations and disbursement', 'Asset Account', 'ACC-1001-01', 1250000.00, 'USD');
 INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Pharmacy Revenue Account', 'Prescription fulfillment and dispensary intake', 'Receivable Account', 'ACC-2002-02', 385400.00, 'USD');
 INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Biomedical Equipment CapEx', 'Capital expenditure and diagnostic hardware leases', 'Asset Account', 'ACC-3003-03', 750000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Physician Payroll Disbursement', 'Salary disbursement account for medical staff', 'Payable Account', 'ACC-4004-04', 520000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Emergency Medicine Fund', 'Dedicated emergency department emergency fund', 'Asset Account', 'ACC-5005-05', 300000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Surgical Suite Operations', 'Operating room equipment and consumables fund', 'Expense Account', 'ACC-6006-06', 420000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Laboratory Pathology Revenue', 'Diagnostic testing and laboratory billing', 'Receivable Account', 'ACC-7007-07', 290000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Facility Maintenance & Utilities', 'Building infrastructure and utilities payment', 'Expense Account', 'ACC-8008-08', 180000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Medical Research & Trials', 'Clinical trial grants and investigation fund', 'Asset Account', 'ACC-9009-09', 650000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Patient Charity Care Reserve', 'Indigent and emergency charity assistance', 'Liability Account', 'ACC-1010-10', 150000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Information Technology Infrastructure', 'Cloud database and server maintenance fund', 'Expense Account', 'ACC-1111-11', 220000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Radiology Diagnostic Revenue', 'MRI, CT scan, and X-Ray imaging receivables', 'Receivable Account', 'ACC-1212-12', 480000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Hospital Endowment & Capital', 'Long-term institutional investment endowment', 'Equity Account', 'ACC-1313-13', 5000000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Vendor Accounts Payable', 'Trade payables for medical supply distributors', 'Payable Account', 'ACC-1414-14', 310000.00, 'USD');
+INSERT INTO HIS_ACCOUNTS (ACC_NAME, ACC_DESC, ACC_TYPE, ACC_NUMBER, ACC_AMOUNT, ACC_CURRENCY) VALUES ('Hospital Reserve Emergency Pool', 'Contingency emergency liquidity reserve', 'Asset Account', 'ACC-1515-15', 2000000.00, 'USD');
 
--- Assets
+-- -----------------------------------------------------
+-- ASSETS (15 COMPLETE ASSETS)
+-- -----------------------------------------------------
 INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
 ('Siemens Magnetom 3T MRI Scanner', 'High-field superconducting whole-body MRI system', 'HealthTech Solutions', 'Active', 'Radiology & Imaging', TO_DATE('2023-06-15', 'YYYY-MM-DD'), 1450000.00, 'SN-MRI-3T-8821');
 INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
 ('GE Healthcare Voluson E10 Ultrasound', 'Advanced 4D diagnostic ultrasound workstation', 'Global Medical Supplies', 'Active', 'Obstetrics & Cardiology', TO_DATE('2023-11-20', 'YYYY-MM-DD'), 185000.00, 'SN-US-VOL-4491');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Canon Aquilion ONE CT Scanner', '640-slice high-resolution dynamic volume CT system', 'HealthTech Solutions', 'Active', 'Radiology & Imaging', TO_DATE('2022-09-10', 'YYYY-MM-DD'), 1200000.00, 'SN-CT-AQ640-102');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Intuitive Surgical da Vinci Xi', 'Dual-console robotic surgical system for minimally invasive surgery', 'Surgical Equipment Inc', 'Active', 'General & Urologic Surgery', TO_DATE('2023-04-05', 'YYYY-MM-DD'), 2100000.00, 'SN-DAVINCI-XI-901');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Philips Azurion 7 Biplane Cath Lab', 'Cardiovascular fluoroscopy interventional lab suite', 'CardioMed Devices', 'Active', 'Cardiology & Angiography', TO_DATE('2022-12-18', 'YYYY-MM-DD'), 1650000.00, 'SN-CATH-AZ7-440');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Olympus EVIS X1 Endoscopy Suite', 'Next-generation video gastrointestinal endoscopy system', 'Surgical Equipment Inc', 'Active', 'Gastroenterology', TO_DATE('2023-08-22', 'YYYY-MM-DD'), 145000.00, 'SN-ENDO-X1-889');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Varian TrueBeam Radiotherapy System', 'Advanced image-guided linear accelerator for radiation oncology', 'OncoTech Therapeutics', 'Active', 'Radiation Oncology', TO_DATE('2021-11-30', 'YYYY-MM-DD'), 2800000.00, 'SN-RAD-VARIAN-771');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Beckman Coulter DxC 700 AU Chemistry Analyzer', 'High-throughput automated clinical chemistry analyzer', 'BioLab Diagnostics', 'Active', 'Pathology & Laboratory', TO_DATE('2023-02-14', 'YYYY-MM-DD'), 175000.00, 'SN-CHEM-DXC700-33');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Stryker System 8 Power Surgical Tools', 'Heavy-duty precision orthopedic bone power surgical suite', 'OrthoTech Implants', 'Active', 'Orthopedic Surgery', TO_DATE('2023-07-19', 'YYYY-MM-DD'), 95000.00, 'SN-STRYKER-S8-612');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Hamilton-C6 High-End Intensive Care Ventilator', 'Advanced mechanical ventilation with IntelliSync+ technology', 'HealthTech Solutions', 'Active', 'Intensive Care Unit (ICU)', TO_DATE('2023-10-02', 'YYYY-MM-DD'), 62000.00, 'SN-HAMILTON-C6-11');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Zoll R Series Plus Defibrillator Fleet', 'Hospital-wide biphasic clinical resuscitation defibrillators', 'Emergency Care Logistics', 'Active', 'Emergency & Code Blue', TO_DATE('2023-01-25', 'YYYY-MM-DD'), 88000.00, 'SN-ZOLL-RSERIES-99');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Dräger Perseus A500 Anesthesia Workstation', 'High-precision breathing anesthesia delivery system', 'Surgical Equipment Inc', 'Active', 'Surgical Operating Theaters', TO_DATE('2022-10-15', 'YYYY-MM-DD'), 115000.00, 'SN-DRAGER-A500-204');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Baxter Prismaflex CRRT Dialysis Machine', 'Continuous renal replacement therapy system for critical care', 'MediSupply Corp', 'Active', 'Nephrology ICU', TO_DATE('2023-05-18', 'YYYY-MM-DD'), 78000.00, 'SN-BAXTER-PRISMA-5');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Hologic Selenia Dimensions 3D Mammography', 'Digital breast tomosynthesis system for early cancer screening', 'Visionary Medical Imaging', 'Active', 'Women''s Health & Imaging', TO_DATE('2022-08-11', 'YYYY-MM-DD'), 295000.00, 'SN-HOLOGIC-3D-410');
+INSERT INTO HIS_ASSETS (ASST_NAME, ASST_DESC, ASST_VENDOR, ASST_STATUS, ASST_DEPT, ASST_PURCHASE_DATE, ASST_PURCHASE_COST, ASST_SERIAL_NUMBER) VALUES
+('Hillrom Centrella Smart+ Hospital Beds', 'Fleet of 50 intelligent patient fall-prevention hospital beds', 'Global Medical Supplies', 'Active', 'Inpatient Nursing Units', TO_DATE('2023-09-08', 'YYYY-MM-DD'), 325000.00, 'SN-HILLROM-BEDS-50');
 
--- Equipment
+-- -----------------------------------------------------
+-- EQUIPMENTS (15 COMPLETE EQUIPMENTS)
+-- -----------------------------------------------------
 INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
 ('EQP-001', 'Philips IntelliVue MX800 Patient Monitor', 'CardioMed Devices', 'Continuous ICU multi-parameter vital signs monitor', 'Cardiology ICU', 'Functioning', 24, 'Building A, 4th Floor ICU');
 INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
 ('EQP-002', 'Medtronic PB980 Ventilator', 'HealthTech Solutions', 'Advanced servo-controlled mechanical ventilator', 'Critical Care', 'Functioning', 16, 'Building B, 3rd Floor');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-003', 'Alaris PC Infusion Pump Module', 'MediSupply Corp', 'Multi-channel smart IV medication infusion system', 'General Inpatient', 'Functioning', 80, 'Central Equipment Storage');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-004', 'GE Healthcare Carescape B850 Monitor', 'Global Medical Supplies', 'High-acuity transport bedside biometric monitor', 'Emergency Department', 'Functioning', 30, 'ER Trauma Bays 1-12');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-005', 'Olympus CV-190 Endoscopy Video Processor', 'Surgical Equipment Inc', 'High-definition video imaging processor for scopes', 'Gastroenterology', 'Functioning', 6, 'Endoscopy Suite 1-3');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-006', 'Welch Allyn Connex Spot Vital Signs Monitor', 'MediSupply Corp', 'Rapid automated vital sign capture workstation', 'Outpatient Clinics', 'Functioning', 45, 'Clinical Exam Rooms');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-007', 'Stryker Secure 3 Transport Stretcher', 'OrthoTech Implants', 'Hydraulic emergency patient transport gurney', 'Emergency Department', 'Functioning', 25, 'Emergency Triage');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-008', 'Covidien Kangaroo ePump Enteral Feed', 'HealthTech Solutions', 'Precision continuous tube feeding infusion pump', 'Gastroenterology & ICU', 'Functioning', 20, 'Ward 4 Floor Depot');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-009', 'Natus Embla N7000 Sleep Diagnostic System', 'NeuroCare Systems', 'Multi-channel polysomnography neurodiagnostic unit', 'Neurology & Sleep Lab', 'Functioning', 4, 'Sleep Diagnostic Center');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-010', 'Bair Hugger 775 Patient Warming Unit', 'MediSupply Corp', 'Forced-air patient hypothermia prevention warmer', 'Surgical OR Suites', 'Functioning', 18, 'Post-Anesthesia Care (PACU)');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-011', 'Terumo Sarns 8000 Heart-Lung Machine', 'CardioMed Devices', 'Extracorporeal circulation pump for open-heart surgery', 'Cardiothoracic OR', 'Functioning', 3, 'OR Suite 1 & 2');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-012', 'Fisher & Paykel Airvo 2 High-Flow System', 'HealthTech Solutions', 'Heated humidified high-flow nasal cannula therapy', 'Pulmonology', 'Functioning', 15, 'Pulmonary Care Ward');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-013', 'Mindray Resona 7 Ultrasound Scanner', 'Visionary Medical Imaging', 'Premium point-of-care mobile ultrasound machine', 'Obstetrics & ER', 'Functioning', 8, 'Mobile Radiology Pool');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-014', 'Belimed WD 290 Washer-Disinfector', 'Surgical Equipment Inc', 'Automated surgical instrument decontamination unit', 'Central Sterile Supply', 'Functioning', 4, 'Sterile Processing Dept');
+INSERT INTO HIS_EQUIPMENTS (EQP_CODE, EQP_NAME, EQP_VENDOR, EQP_DESC, EQP_DEPT, EQP_STATUS, EQP_QTY, EQP_LOCATION) VALUES
+('EQP-015', 'Sorvall Legend XFR Refrigerated Centrifuge', 'BioLab Diagnostics', 'High-capacity clinical pathology sample centrifuge', 'Pathology & Blood Bank', 'Functioning', 6, 'Core Laboratory 2nd Floor');
 
--- Laboratory Tests (Rich Clinical Seed)
+-- -----------------------------------------------------
+-- LABORATORY TESTS (COMPLETE CLINICAL SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
 ('LAB-1001', 'PAT-DEMO', 'DOC-DEMO', 'Comprehensive Metabolic Panel (CMP) + High-Sensitivity Troponin I', 'Troponin I: <0.01 ng/mL (Normal baseline). Na: 140 mEq/L, K: 4.2 mEq/L, Creatinine: 0.95 mg/dL. Renal function intact.', 'Completed', SYSTIMESTAMP - 4, SYSTIMESTAMP - 3);
 INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
 ('LAB-1002', 'PAT-DEMO', 'DOC-DEMO', '12-Lead Electrocardiogram (ECG) & Transthoracic Echocardiogram', 'Sinus rhythm with mild LVH. LVEF estimated at 60%. Normal diastolic filling pattern. No acute ischemic ST-segment shifts.', 'Completed', SYSTIMESTAMP - 2, SYSTIMESTAMP - 1);
 INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC) VALUES
 ('LAB-1003', 'PAT-DEMO', 'DOC-DEMO', 'Fractional Excretion of Sodium & 24h Urine Microalbumin', 'Specimen received in pathology. Analysis queued on Beckman Coulter analyzer.', 'In Progress', SYSTIMESTAMP - 0.5);
+INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
+('LAB001', 'PAT001', 'DOC001', 'Complete Blood Count (CBC) + Lipid Profile', 'WBC: 7.2 x10^3/uL, RBC: 4.8 x10^6/uL, Hgb: 15.2 g/dL, Platelets: 240 x10^3/uL. Total Cholesterol: 210 mg/dL, LDL: 135 mg/dL, HDL: 42 mg/dL.', 'Completed', SYSTIMESTAMP - 5, SYSTIMESTAMP - 4);
+INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
+('LAB002', 'PAT002', 'DOC002', 'Brain MRI Protocol + Serum Electrolytes', 'No acute intracranial hemorrhage, mass effect, or territorial infarction. Normal ventricular size.', 'Completed', SYSTIMESTAMP - 3, SYSTIMESTAMP - 2);
+INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
+('LAB003', 'PAT003', 'DOC003', 'Pediatric Pulmonary Function Test & IgE Panel', 'FEV1/FVC ratio: 78%. Mild reversible airway obstruction noted post-albuterol challenge. Elevated total IgE: 180 kU/L.', 'Completed', SYSTIMESTAMP - 6, SYSTIMESTAMP - 5);
+INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
+('LAB004', 'PAT004', 'DOC004', 'Right Knee Weight-Bearing X-Ray Series', 'Moderate-to-severe medial joint space narrowing, subchondral sclerosis, and marginal osteophytes consistent with Kellgren-Lawrence Grade 3 OA.', 'Completed', SYSTIMESTAMP - 7, SYSTIMESTAMP - 6);
+INSERT INTO HIS_LABORATORY (LAB_NUMBER, LAB_PAT_NUMBER, LAB_DOC_NUMBER, LAB_PAT_TESTS, LAB_PAT_RESULTS, LAB_STATUS, LAB_DATE_REC, LAB_COMPLETED_DATE) VALUES
+('LAB005', 'PAT005', 'DOC005', 'Carcinoembryonic Antigen (CEA) + Abdominal CT', 'Baseline CEA: 3.8 ng/mL (Normal <5.0). Abdominal CT demonstrates no distant visceral metastasis. Localized sigmoid thickening noted.', 'Completed', SYSTIMESTAMP - 8, SYSTIMESTAMP - 7);
 
--- Medical Records
+-- -----------------------------------------------------
+-- MEDICAL RECORDS (COMPLETE CLINICAL SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_MEDICAL_RECORDS (MDR_NUMBER, MDR_PAT_NUMBER, MDR_DOC_NUMBER, MDR_PAT_PRESCR, MDR_DIAGNOSIS, MDR_TREATMENT_PLAN, MDR_DATE_REC) VALUES
 ('MDR-1001', 'PAT-DEMO', 'DOC-DEMO', 'Metoprolol Succinate 50mg PO Daily, Atorvastatin 20mg PO QHS', 'Stage 2 Essential Hypertension with exertional angina pectoris (CCS Class II)', 'Optimize oral antihypertensive therapy. Sodium restriction <2g/day. Scheduled cardiac stress imaging follow-up.', SYSTIMESTAMP - 10);
 INSERT INTO HIS_MEDICAL_RECORDS (MDR_NUMBER, MDR_PAT_NUMBER, MDR_DOC_NUMBER, MDR_PAT_PRESCR, MDR_DIAGNOSIS, MDR_TREATMENT_PLAN, MDR_DATE_REC) VALUES
 ('MDR-1002', 'PAT-DEMO-002', 'DOC-DEMO', 'Aspirin 81mg PO Daily, Clopidogrel 75mg PO Daily', 'Post-Coronary Artery Bypass Graft (CABG x3) convalescence', 'Cardiac rehabilitation phase II. Continuous telemetry monitoring. Wound inspection every 48h.', SYSTIMESTAMP - 6);
+INSERT INTO HIS_MEDICAL_RECORDS (MDR_NUMBER, MDR_PAT_NUMBER, MDR_DOC_NUMBER, MDR_PAT_PRESCR, MDR_DIAGNOSIS, MDR_TREATMENT_PLAN, MDR_DATE_REC) VALUES
+('MDR001', 'PAT001', 'DOC001', 'Atorvastatin 20mg PO Daily, Lisinopril 10mg PO Daily', 'Coronary Artery Disease with stable angina', 'Continue dual lipid and blood pressure control. Stress testing in 6 months.', SYSTIMESTAMP - 15);
+INSERT INTO HIS_MEDICAL_RECORDS (MDR_NUMBER, MDR_PAT_NUMBER, MDR_DOC_NUMBER, MDR_PAT_PRESCR, MDR_DIAGNOSIS, MDR_TREATMENT_PLAN, MDR_DATE_REC) VALUES
+('MDR002', 'PAT002', 'DOC002', 'Sumatriptan 50mg PRN, Topiramate 25mg PO QHS', 'Refractory Migraine with visual aura', 'Initiate preventive bedtime regimen. Maintain headache trigger diary.', SYSTIMESTAMP - 12);
+INSERT INTO HIS_MEDICAL_RECORDS (MDR_NUMBER, MDR_PAT_NUMBER, MDR_DOC_NUMBER, MDR_PAT_PRESCR, MDR_DIAGNOSIS, MDR_TREATMENT_PLAN, MDR_DATE_REC) VALUES
+('MDR003', 'PAT003', 'DOC003', 'Albuterol Inhaler 2 puffs Q4H PRN, Fluticasone 44mcg 1 puff BID', 'Moderate persistent pediatric bronchial asthma', 'Use spacer for inhalation. Action plan provided to school nurse.', SYSTIMESTAMP - 8);
 
--- Patient Transfers
+-- -----------------------------------------------------
+-- PATIENT TRANSFERS (COMPLETE SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_PATIENT_TRANSFER (PT_PAT_NUMBER, PT_FROM_WARD, PT_TO_WARD, PT_REASON, PT_AUTHORIZED_BY, PT_STATUS) VALUES
 ('PAT-DEMO', 'Emergency Resuscitation Bay 3', 'Cardiology Intermediate Care (Ward 4B)', 'Hemodynamic stabilization following acute angina presentation', 'DOC-DEMO', 'Completed');
+INSERT INTO HIS_PATIENT_TRANSFER (PT_PAT_NUMBER, PT_FROM_WARD, PT_TO_WARD, PT_REASON, PT_AUTHORIZED_BY, PT_STATUS) VALUES
+('PAT001', 'Emergency Room Triage', 'Cardiology Inpatient Ward 3A', 'Admission for acute chest pain evaluation', 'DOC001', 'Completed');
+INSERT INTO HIS_PATIENT_TRANSFER (PT_PAT_NUMBER, PT_FROM_WARD, PT_TO_WARD, PT_REASON, PT_AUTHORIZED_BY, PT_STATUS) VALUES
+('PAT004', 'Post-Op Surgical PACU', 'Orthopedic Inpatient Wing 2B', 'Post-arthroplasty continuous recovery observation', 'DOC004', 'Completed');
+INSERT INTO HIS_PATIENT_TRANSFER (PT_PAT_NUMBER, PT_FROM_WARD, PT_TO_WARD, PT_REASON, PT_AUTHORIZED_BY, PT_STATUS) VALUES
+('PAT005', 'Surgical Step-Down Unit', 'Oncology Care Floor 5', 'Post-colectomy telemetry and chemotherapy prep', 'DOC005', 'Completed');
 
--- Payrolls
+-- -----------------------------------------------------
+-- PAYROLLS (COMPLETE SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
 ('PAY-1001', 'DOC-DEMO', 18500.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
 INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
 ('PAY-1002', 'DOC001', 16200.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
+INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
+('PAY-1003', 'DOC002', 15800.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
+INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
+('PAY-1004', 'DOC003', 14500.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
+INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
+('PAY-1005', 'DOC004', 19200.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
+INSERT INTO HIS_PAYROLLS (PAY_NUMBER, PAY_DOC_NUMBER, PAY_AMOUNT, PAY_PERIOD, PAY_STATUS, PAY_DATE, PAY_METHOD) VALUES
+('PAY-1006', 'DOC005', 17800.00, 'September 2026', 'Paid', TO_DATE('2026-09-01', 'YYYY-MM-DD'), 'Direct Deposit');
 
--- Prescriptions
+-- -----------------------------------------------------
+-- PRESCRIPTIONS (COMPLETE SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
 ('PRES-1001', 'PAT-DEMO', 'DOC-DEMO', 'Metoprolol Succinate Extended-Release', '50 mg', 'Once daily in the morning', '90 days', 'Active', 3, 'Take with meals. Monitor resting pulse prior to administration.');
 INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
 ('PRES-1002', 'PAT-DEMO', 'DOC-DEMO', 'Atorvastatin Calcium', '20 mg', 'Once daily at bedtime', '90 days', 'Active', 3, 'Target LDL < 70 mg/dL. Routine hepatic panel in 12 weeks.');
 INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
 ('PRES-1003', 'PAT-DEMO', 'DOC-DEMO', 'Nitroglycerin Sublingual Tablets', '0.4 mg', 'As needed for acute chest tightness', 'PRN (30 days)', 'Active', 2, 'Dissolve 1 tablet sublingually every 5 min up to 3 doses if angina occurs.');
+INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
+('PRES001', 'PAT001', 'DOC001', 'Lisinopril Tablets', '10 mg', 'Once daily in the morning', '90 days', 'Active', 2, 'Monitor blood pressure weekly.');
+INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
+('PRES002', 'PAT002', 'DOC002', 'Topiramate Tablets', '25 mg', 'Once daily at bedtime', '60 days', 'Active', 1, 'Hydrate adequately.');
+INSERT INTO HIS_PRESCRIPTIONS (PRES_NUMBER, PRES_PAT_NUMBER, PRES_DOC_NUMBER, PRES_MEDICATION, PRES_DOSAGE, PRES_FREQUENCY, PRES_DURATION, PRES_STATUS, PRES_REFILLS_REMAINING, PRES_NOTES) VALUES
+('PRES003', 'PAT003', 'DOC003', 'Albuterol Inhalation Aerosol', '90 mcg/actuation', '2 puffs every 4-6 hours PRN', '30 days', 'Active', 4, 'Rinse mouth after use.');
 
--- Surgeries
+-- -----------------------------------------------------
+-- SURGERIES (COMPLETE SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_SURGERY (SURG_NUMBER, SURG_PAT_NUMBER, SURG_DOC_NUMBER, SURG_TYPE, SURG_DATE, SURG_DURATION, SURG_STATUS, SURG_NOTES) VALUES
 ('SURG-1001', 'PAT-DEMO', 'DOC-DEMO', 'Diagnostic Coronary Angiography & Fractional Flow Reserve', SYSTIMESTAMP + 5, '1.5 hours', 'Scheduled', 'Right radial artery access planned. Patient consented for hemodynamic pressure wire assessment.');
+INSERT INTO HIS_SURGERY (SURG_NUMBER, SURG_PAT_NUMBER, SURG_DOC_NUMBER, SURG_TYPE, SURG_DATE, SURG_DURATION, SURG_STATUS, SURG_NOTES) VALUES
+('SURG001', 'PAT004', 'DOC004', 'Total Knee Arthroplasty (Right Knee)', SYSTIMESTAMP - 4, '2.5 hours', 'Completed', 'Uncemented cruciate-retaining prosthesis implanted. Excellent alignment confirmed on intraoperative fluoroscopy.');
+INSERT INTO HIS_SURGERY (SURG_NUMBER, SURG_PAT_NUMBER, SURG_DOC_NUMBER, SURG_TYPE, SURG_DATE, SURG_DURATION, SURG_STATUS, SURG_NOTES) VALUES
+('SURG002', 'PAT005', 'DOC005', 'Laparoscopic Sigmoid Colectomy', SYSTIMESTAMP - 6, '3.0 hours', 'Completed', 'Minimally invasive resection with primary end-to-end anastomosis. 18 lymph nodes harvested.');
 
--- Vitals
+-- -----------------------------------------------------
+-- VITALS (COMPLETE SEED)
+-- -----------------------------------------------------
 INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
 ('PAT-DEMO', 98.4, 72, 16, 78.5, '124/82', 98.5, 'Nurse Practitioner J. Kelly', SYSTIMESTAMP - 0.2);
 INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
 ('PAT-DEMO', 98.6, 76, 17, 78.8, '132/86', 99.0, 'Nurse Practitioner J. Kelly', SYSTIMESTAMP - 1.0);
 INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
 ('PAT-DEMO', 99.1, 84, 18, 79.1, '142/90', 97.8, 'Triage RN R. Miller', SYSTIMESTAMP - 2.5);
+INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
+('PAT001', 98.6, 72, 16, 175.5, '120/80', 98.0, 'Nurse Johnson', SYSTIMESTAMP - 1);
+INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
+('PAT002', 98.4, 68, 14, 140.2, '118/75', 99.0, 'Nurse Davis', SYSTIMESTAMP - 2);
+INSERT INTO HIS_VITALS (VIT_PAT_NUMBER, VIT_BODYTEMP, VIT_HEARTPULSE, VIT_RESPIRATION, VIT_WEIGHT, VIT_BLOOD_PRESSURE, VIT_OXYGEN_SAT, VIT_RECORDED_BY, VIT_RECORDED_DATE) VALUES
+('PAT003', 98.8, 88, 20, 68.4, '105/65', 97.0, 'Nurse Wilson', SYSTIMESTAMP - 3);
+
+-- -----------------------------------------------------
+-- UNIFIED USER ACCOUNTS (ALL CLINICAL ROLES IN HIS_USERS)
+-- -----------------------------------------------------
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('admin@curewell.com', 'admin', 1, 'System', 'Administrator', 'Active', SYSTIMESTAMP - 1);
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('demo.admin@curewell.com', 'demo123', 1, 'Hospital', 'Admin', 'Active', SYSTIMESTAMP - 0.5);
+
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('demo.doctor@curewell.com', 'demo123', 2, 'Alexander', 'Hayes', 'Active', SYSTIMESTAMP - 0.2);
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('s.jenkins@curewell.com', 'doctor', 2, 'Sarah', 'Jenkins', 'Active', SYSTIMESTAMP - 1);
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('m.chang@curewell.com', 'doctor', 2, 'Michael', 'Chang', 'Active', SYSTIMESTAMP - 2);
+
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('demo.patient@curewell.com', 'demo123', 3, 'Alex', 'Morgan', 'Active', SYSTIMESTAMP - 0.1);
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('john.doe@email.com', 'patient123', 3, 'John', 'Doe', 'Active', SYSTIMESTAMP - 4);
+INSERT INTO HIS_USERS (USER_EMAIL, USER_PWD, USER_ROLE_ID, USER_FNAME, USER_LNAME, USER_STATUS, USER_LAST_LOGIN) VALUES
+('jane.smith@email.com', 'patient123', 3, 'Jane', 'Smith', 'Active', SYSTIMESTAMP - 3);
 
 COMMIT;
 
@@ -1057,6 +1316,6 @@ SELECT 'Foreign Keys Active: ' || COUNT(*) AS SUMMARY FROM user_constraints WHER
 SELECT 'Triggers Active: ' || COUNT(*) AS SUMMARY FROM user_triggers WHERE trigger_name LIKE 'HIS_%';
 
 SELECT 'Demo Accounts Available for Login:' AS SUMMARY FROM DUAL;
-SELECT '  - Admin   : admin@curewell.com / admin' AS SUMMARY FROM DUAL;
-SELECT '  - Doctor  : doctor@curewell.com / doctor (DOC-DEMO: Dr. Alexander Hayes)' AS SUMMARY FROM DUAL;
-SELECT '  - Patient : demo.patient@curewell.com / patient (PAT-DEMO: Alex Morgan)' AS SUMMARY FROM DUAL;
+SELECT '  - Admin   : demo.admin@curewell.com (demo123) / admin@curewell.com (admin)' AS SUMMARY FROM DUAL;
+SELECT '  - Doctor  : demo.doctor@curewell.com (demo123) / s.jenkins@curewell.com (doctor)' AS SUMMARY FROM DUAL;
+SELECT '  - Patient : demo.patient@curewell.com (demo123 or 1-click email login)' AS SUMMARY FROM DUAL;
