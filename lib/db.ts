@@ -78,14 +78,20 @@ export async function getPool(): Promise<oracledb.Pool> {
     return globalThis._oraclePool;
   }
 
+  // Fast bailout during Next.js production build phase if credentials are not configured
+  const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' || process.env.NEXT_PHASE === 'PHASE_PRODUCTION_BUILD';
+
   const user = process.env.ORACLE_USER || process.env.DB_USER;
   const password = process.env.ORACLE_PASSWORD || process.env.DB_PASSWORD;
   const connectString = process.env.ORACLE_TNS_NAME || process.env.DB_CONNECTION_STRING;
   const walletPassword = process.env.ORACLE_WALLET_PASSWORD;
 
   if (!user || !password || !connectString) {
+    if (isBuildPhase) {
+      throw new Error('[Oracle DB] Skipping connection during build phase: database credentials not provided.');
+    }
     throw new Error(
-      'Missing required Oracle credentials. Please provide ORACLE_USER, ORACLE_PASSWORD, and ORACLE_TNS_NAME (or DB_USER, DB_PASSWORD, DB_CONNECTION_STRING).'
+      'Missing required Oracle credentials. Please configure ORACLE_USER, ORACLE_PASSWORD, and ORACLE_TNS_NAME in environment variables.'
     );
   }
 
@@ -95,10 +101,12 @@ export async function getPool(): Promise<oracledb.Pool> {
     user,
     password,
     connectString,
-    poolMin: 1,
-    poolMax: 5,
+    poolMin: 0,
+    poolMax: 4,
     poolIncrement: 1,
-    poolTimeout: 60,
+    poolTimeout: 30,
+    queueTimeout: 5000,
+    stmtCacheSize: 20,
   };
 
   if (walletDir) {
@@ -118,6 +126,7 @@ export async function getPool(): Promise<oracledb.Pool> {
     throw error;
   }
 }
+
 
 /**
  * Executes a query or DML/DDL statement with safe connection lifecycle management.

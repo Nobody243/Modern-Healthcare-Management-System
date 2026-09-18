@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { checkDemoDeletionGuard } from '@/lib/demo-guard';
 import { NextRequest, NextResponse } from 'next/server';
 import { execute } from '@/lib/db';
