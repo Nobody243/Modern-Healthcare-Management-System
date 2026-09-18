@@ -9,10 +9,11 @@ import {
   FlaskConical, 
   Activity, 
   Scissors, 
-  LogOut,
-  User,
-  FileHeart
+  LogOut, 
+  User, 
+  FileHeart 
 } from 'lucide-react';
+import { preloadApi } from '@/lib/api-cache';
 
 import { useState } from 'react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -27,13 +28,13 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const navItems = [
-    { href: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/patient/prescriptions', label: 'My Prescriptions', icon: Pill },
-    { href: '/patient/laboratory', label: 'Lab Results', icon: FlaskConical },
-    { href: '/patient/vitals', label: 'Vital Signs', icon: Activity },
-    { href: '/patient/surgeries', label: 'Surgeries', icon: Scissors },
-    { href: '/patient/records', label: 'Medical Records', icon: FileHeart },
-    { href: '/patient/profile', label: 'My Profile', icon: User },
+    { href: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard, api: '/api/vitals' },
+    { href: '/patient/prescriptions', label: 'My Prescriptions', icon: Pill, api: '/api/prescriptions' },
+    { href: '/patient/laboratory', label: 'Lab Results', icon: FlaskConical, api: '/api/laboratory' },
+    { href: '/patient/vitals', label: 'Vital Signs', icon: Activity, api: '/api/vitals' },
+    { href: '/patient/surgeries', label: 'Surgeries', icon: Scissors, api: '/api/surgery' },
+    { href: '/patient/records', label: 'Medical Records', icon: FileHeart, api: '/api/records' },
+    { href: '/patient/profile', label: 'My Profile', icon: User, api: '/api/patient/update-profile' },
   ];
 
   const handleLogout = async () => {
@@ -75,7 +76,12 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                 const Icon = item.icon;
                 
                 return (
-                  <Link key={item.href} href={item.href}>
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={true}
+                    onMouseEnter={() => item.api && preloadApi(item.api)}
+                  >
                     <motion.div
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}

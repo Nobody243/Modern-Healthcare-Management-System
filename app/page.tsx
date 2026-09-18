@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import Link from 'next/link';
 import {
   Stethoscope,
@@ -130,28 +130,31 @@ function CinematicTelemetryCenter() {
         <div className="flex items-center p-1 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
           <button
             onClick={() => setActiveChannel('icu')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'icu'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              activeChannel === 'icu'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             CH 01: CARDIAC ICU
           </button>
           <button
             onClick={() => setActiveChannel('or')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'or'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              activeChannel === 'or'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             CH 02: OR SUITE 2
           </button>
           <button
             onClick={() => setActiveChannel('oracle')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${activeChannel === 'oracle'
+            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+              activeChannel === 'oracle'
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
-              }`}
+            }`}
           >
             CH 03: ORACLE 19c
           </button>
@@ -506,13 +509,26 @@ export default function HomePage() {
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [liveTimecode, setLiveTimecode] = useState('00:00:00:00');
 
-  // Smooth scroll progress bar with Framer Motion spring physics
+  // Direct 1:1 scroll progress without laggy spring
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+
+  // Scroll spy to update top navbar pill smoothly as user scrolls
+  useEffect(() => {
+    const sectionIds = ['hero', 'telemetry', 'portals', 'architecture', 'security'];
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 200;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveNav(sectionIds[i]);
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Real-time movie timecode simulation (HH:MM:SS:FF)
   useEffect(() => {
@@ -621,10 +637,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden">
-      {/* Top Cinematic Film Scroll Progress Indicator */}
+      {/* Top 1:1 Instant Scroll Progress Indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 z-50 origin-left"
-        style={{ scaleX }}
+        style={{ scaleX: scrollYProgress }}
       />
 
       {/* Background Architectural Grid & Precision Laser Scan Lines */}
@@ -662,7 +678,7 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Smooth Scroll Chapter Navigation Links */}
+          {/* Smooth Scroll Chapter Navigation Links with Real-Time Pill Slide */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-full border border-slate-800/90 text-xs font-semibold text-slate-400">
             {[
               { id: 'hero', label: 'Overview' },
@@ -670,24 +686,28 @@ export default function HomePage() {
               { id: 'portals', label: 'Clinical Portals' },
               { id: 'architecture', label: 'Oracle Architecture' },
               { id: 'security', label: 'Security & HIPAA' },
-            ].map((navItem) => (
-              <a
-                key={navItem.id}
-                href={`#${navItem.id}`}
-                onClick={(e) => scrollToSection(e, navItem.id)}
-                className={`relative px-4 py-1.5 rounded-full transition-colors cursor-pointer ${activeNav === navItem.id ? 'text-white' : 'hover:text-slate-200'
+            ].map((navItem) => {
+              const isActive = activeNav === navItem.id;
+              return (
+                <a
+                  key={navItem.id}
+                  href={`#${navItem.id}`}
+                  onClick={(e) => scrollToSection(e, navItem.id)}
+                  className={`relative px-4 py-1.5 rounded-full transition-colors cursor-pointer ${
+                    isActive ? 'text-white' : 'hover:text-slate-200'
                   }`}
-              >
-                {activeNav === navItem.id && (
-                  <motion.div
-                    layoutId="activeNavIndicator"
-                    className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-full"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{navItem.label}</span>
-              </a>
-            ))}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavIndicator"
+                      className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-full"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{navItem.label}</span>
+                </a>
+              );
+            })}
           </nav>
 
           {/* Right Action & Film Timecode Status */}
@@ -908,7 +928,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          {/* Portal Selector Tabs */}
+          {/* Portal Selector Tabs with Morphing Spring Pill Highlight */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -916,7 +936,7 @@ export default function HomePage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex justify-center mb-8"
           >
-            <div className="p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex gap-1.5">
+            <div className="p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex gap-1.5 relative">
               {(['doctor', 'patient', 'admin'] as const).map((tab) => {
                 const Icon = portalDetails[tab].icon;
                 const isActive = activePortalTab === tab;
@@ -924,13 +944,23 @@ export default function HomePage() {
                   <button
                     key={tab}
                     onClick={() => setActivePortalTab(tab)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${isActive
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-lg shadow-cyan-500/25'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                      }`}
+                    className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                      isActive
+                        ? 'text-slate-950 font-extrabold'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                    }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="capitalize">{tab} Portal</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activePortalTabPill"
+                        className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/30"
+                        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      <span className="capitalize">{tab} Portal</span>
+                    </span>
                   </button>
                 );
               })}
@@ -1110,7 +1140,8 @@ export default function HomePage() {
                   </div>
                   <h3 className="text-base font-bold text-white">Continuous Vital Telemetry</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Tracks pulse, blood pressure, respiration, body temp, and oxygen saturation with automated range validation.
+                    Tracks heart pulse, blood pressure, respiration, body temp, and oxygen saturation with
+                    automated normal range validation.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-rose-400 font-semibold">

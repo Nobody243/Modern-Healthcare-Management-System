@@ -63,7 +63,8 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* Natural native scrolling - programmatic smooth scroll used on anchor buttons */
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Default: Disable text selection across UI chrome for a clean native app feel */

@@ -3,21 +3,22 @@ import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   Users, 
-  FileText,
-  Syringe,
-  HeartPulse,
-  FlaskConical,
-  UserCircle,
-  LogOut,
-  Menu,
-  X,
-  ClipboardList,
-  ArrowRightLeft
+  FileText, 
+  Syringe, 
+  HeartPulse, 
+  FlaskConical, 
+  UserCircle, 
+  LogOut, 
+  Menu, 
+  X, 
+  ClipboardList, 
+  ArrowRightLeft 
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { preloadApi } from '@/lib/api-cache';
 
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
@@ -31,15 +32,15 @@ interface DoctorLayoutProps {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/doctor/dashboard' },
-  { icon: Users, label: 'My Patients', href: '/doctor/patients' },
-  { icon: FileText, label: 'Prescriptions', href: '/doctor/prescriptions' },
-  { icon: Syringe, label: 'Surgeries', href: '/doctor/surgeries' },
-  { icon: HeartPulse, label: 'Vitals', href: '/doctor/vitals' },
-  { icon: FlaskConical, label: 'Lab Results', href: '/doctor/laboratory' },
-  { icon: ArrowRightLeft, label: 'Patient Transfers', href: '/doctor/patient-transfers' },
-  { icon: ClipboardList, label: 'Medical Records', href: '/doctor/records' },
-  { icon: UserCircle, label: 'Profile', href: '/doctor/profile' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/doctor/dashboard', api: '/api/doctors/me' },
+  { icon: Users, label: 'My Patients', href: '/doctor/patients', api: '/api/doctor/patients' },
+  { icon: FileText, label: 'Prescriptions', href: '/doctor/prescriptions', api: '/api/doctor/prescriptions' },
+  { icon: Syringe, label: 'Surgeries', href: '/doctor/surgeries', api: '/api/doctor/surgeries' },
+  { icon: HeartPulse, label: 'Vitals', href: '/doctor/vitals', api: '/api/doctor/vitals' },
+  { icon: FlaskConical, label: 'Lab Results', href: '/doctor/laboratory', api: '/api/doctor/laboratory' },
+  { icon: ArrowRightLeft, label: 'Patient Transfers', href: '/doctor/patient-transfers', api: '/api/doctor/patient-transfers' },
+  { icon: ClipboardList, label: 'Medical Records', href: '/doctor/records', api: '/api/doctor/records' },
+  { icon: UserCircle, label: 'Profile', href: '/doctor/profile', api: '/api/doctors/me' },
 ];
 
 export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
@@ -94,6 +95,8 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
+                onMouseEnter={() => item.api && preloadApi(item.api)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                   isActive

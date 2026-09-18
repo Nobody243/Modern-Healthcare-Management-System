@@ -24,9 +24,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { preloadApi } from '@/lib/api-cache';
 
 import { UserSession } from '@/lib/auth';
-
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface AdminLayoutProps {
@@ -35,22 +35,22 @@ interface AdminLayoutProps {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard' },
-  { icon: Users, label: 'Patients', href: '/admin/patients' },
-  { icon: UserCog, label: 'Doctors', href: '/admin/doctors' },
-  { icon: Pill, label: 'Pharmaceuticals', href: '/admin/pharmaceuticals' },
-  { icon: Tags, label: 'Pharm Categories', href: '/admin/pharmaceutical-categories' },
-  { icon: FlaskConical, label: 'Laboratory', href: '/admin/laboratory' },
-  { icon: Syringe, label: 'Surgery', href: '/admin/surgery' },
-  { icon: HeartPulse, label: 'Vitals', href: '/admin/vitals' },
-  { icon: FileText, label: 'Medical Records', href: '/admin/records' },
-  { icon: Clipboard, label: 'Prescriptions', href: '/admin/prescriptions' },
-  { icon: DollarSign, label: 'Payrolls', href: '/admin/payrolls' },
-  { icon: Wallet, label: 'Accounts', href: '/admin/accounts' },
-  { icon: Package, label: 'Assets', href: '/admin/assets' },
-  { icon: Wrench, label: 'Equipments', href: '/admin/equipments' },
-  { icon: Building2, label: 'Vendors', href: '/admin/vendors' },
-  { icon: ArrowLeftRight, label: 'Patient Transfers', href: '/admin/patient-transfers' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', api: '/api/patients' },
+  { icon: Users, label: 'Patients', href: '/admin/patients', api: '/api/patients' },
+  { icon: UserCog, label: 'Doctors', href: '/admin/doctors', api: '/api/doctors' },
+  { icon: Pill, label: 'Pharmaceuticals', href: '/admin/pharmaceuticals', api: '/api/pharmaceuticals' },
+  { icon: Tags, label: 'Pharm Categories', href: '/admin/pharmaceutical-categories', api: '/api/pharmaceutical-categories' },
+  { icon: FlaskConical, label: 'Laboratory', href: '/admin/laboratory', api: '/api/laboratory' },
+  { icon: Syringe, label: 'Surgery', href: '/admin/surgery', api: '/api/surgery' },
+  { icon: HeartPulse, label: 'Vitals', href: '/admin/vitals', api: '/api/vitals' },
+  { icon: FileText, label: 'Medical Records', href: '/admin/records', api: '/api/records' },
+  { icon: Clipboard, label: 'Prescriptions', href: '/admin/prescriptions', api: '/api/prescriptions' },
+  { icon: DollarSign, label: 'Payrolls', href: '/admin/payrolls', api: '/api/payrolls' },
+  { icon: Wallet, label: 'Accounts', href: '/admin/accounts', api: '/api/accounts' },
+  { icon: Package, label: 'Assets', href: '/admin/assets', api: '/api/assets' },
+  { icon: Wrench, label: 'Equipments', href: '/admin/equipments', api: '/api/equipments' },
+  { icon: Building2, label: 'Vendors', href: '/admin/vendors', api: '/api/vendors' },
+  { icon: ArrowLeftRight, label: 'Patient Transfers', href: '/admin/patient-transfers', api: '/api/patient-transfers' },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -105,6 +105,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
+                onMouseEnter={() => item.api && preloadApi(item.api)}
                 style={{ animationDelay: `${index * 0.05}s` }}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 hover-lift animate-fade-in",
