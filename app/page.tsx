@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import Link from 'next/link';
 import {
   Stethoscope,
   Users,
   Activity,
-  Calendar,
   Database,
   Pill,
   Building2,
@@ -17,12 +16,14 @@ import {
   Sparkles,
   Server,
   HeartPulse,
-  Radio,
   Sliders,
   Copy,
   Check,
-  Zap,
-  AlertCircle,
+  ShieldCheck,
+  Clock,
+  Key,
+  Menu,
+  X,
   Crosshair,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,18 +41,18 @@ function SpotlightCard({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
     cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-  };
+  }, []);
 
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      className={`group relative overflow-hidden rounded-2xl bg-slate-950/80 border border-slate-800/80 backdrop-blur-md transition-all duration-300 hover:border-slate-700/90 hover:shadow-xl hover:shadow-cyan-500/5 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl bg-slate-900/70 border border-slate-800/80 backdrop-blur-md transition-all duration-300 hover:border-slate-700 hover:shadow-xl hover:shadow-cyan-500/5 hover:-translate-y-0.5 transform-gpu will-change-transform ${className}`}
     >
       {/* Studio Keylight Spotlight Beam (Compositor Level) */}
       <div
@@ -69,452 +70,20 @@ function SpotlightCard({
 }
 
 // ============================================================================
-// CINEMATIC LIVE CLINICAL TELEMETRY COMMAND CENTER
-// ============================================================================
-function CinematicTelemetryCenter() {
-  const [activeChannel, setActiveChannel] = useState<'icu' | 'or' | 'oracle'>('icu');
-  const [bpm, setBpm] = useState(74);
-  const [spo2, setSpo2] = useState(98);
-  const [bp, setBp] = useState('120/80');
-  const [simMessage, setSimMessage] = useState<string | null>(null);
-
-  // Live biological pulse variation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBpm(72 + Math.floor(Math.sin(Date.now() / 2500) * 3));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const triggerSimulation = (type: 'spike' | 'normal' | 'commit') => {
-    if (type === 'spike') {
-      setBpm(112);
-      setSpo2(95);
-      setBp('138/92');
-      setSimMessage('TACHYCARDIA EVENT RECORDED - TRIAGE ESCALATION NOTIFIED');
-    } else if (type === 'normal') {
-      setBpm(74);
-      setSpo2(99);
-      setBp('120/80');
-      setSimMessage('NORMAL SINUS RESTORED - VITALS WITHIN NOMINAL BASELINE');
-    } else {
-      setSimMessage('ORACLE 19c COMMIT EXECUTED // ACID LATENCY: 14MS // TXN ID: #88392');
-    }
-
-    setTimeout(() => {
-      setSimMessage(null);
-    }, 4500);
-  };
-
-  return (
-    <div className="rounded-3xl bg-slate-950/90 border border-slate-800/90 shadow-[0_20px_50px_rgba(0,0,0,0.7)] overflow-hidden backdrop-blur-xl">
-      {/* Studio Film HUD Header */}
-      <div className="px-6 py-4 bg-slate-900/90 border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-4">
-        {/* Left Status */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          </div>
-          <div className="h-4 w-px bg-slate-800 mx-1 hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            <span className="text-xs font-mono font-bold tracking-wider text-slate-200">
-              STREAM://HMS-CORE-01.LIVE
-            </span>
-          </div>
-        </div>
-
-        {/* Center Multi-Channel Switcher */}
-        <div className="flex items-center p-1 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono">
-          <button
-            onClick={() => setActiveChannel('icu')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'icu'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            CH 01: CARDIAC ICU
-          </button>
-          <button
-            onClick={() => setActiveChannel('or')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'or'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            CH 02: OR SUITE 2
-          </button>
-          <button
-            onClick={() => setActiveChannel('oracle')}
-            className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-              activeChannel === 'oracle'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            CH 03: ORACLE 19c
-          </button>
-        </div>
-
-        {/* Right Status Badge */}
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
-            ACID BUFFER: SYNCED
-          </span>
-        </div>
-      </div>
-
-      {/* Main Multi-Channel Broadcast Stage */}
-      <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 bg-gradient-to-b from-slate-900/40 via-slate-950/70 to-slate-950">
-        {/* Left Telemetry Feed (7 Cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          <AnimatePresence mode="wait">
-            {activeChannel === 'icu' && (
-              <motion.div
-                key="icu"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-5"
-              >
-                {/* Patient Header */}
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                      <HeartPulse className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-white">Alex Morgan</h4>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-semibold">
-                          PAT001 • BED ICU-4
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Attending Physician: Dr. Alexander Hayes (Cardiology)
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    STATUS: STABLE
-                  </span>
-                </div>
-
-                {/* 4 Biometric Metric Boxes */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                      Heart Pulse
-                    </p>
-                    <p className="text-2xl font-black font-mono text-rose-400 mt-1">
-                      {bpm} <span className="text-xs font-normal text-slate-400">BPM</span>
-                    </p>
-                    <p className="text-[9px] text-slate-500 mt-1 font-mono">Range: 60-100</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                      SpO2 Blood O2
-                    </p>
-                    <p className="text-2xl font-black font-mono text-cyan-400 mt-1">
-                      {spo2}% <span className="text-xs font-normal text-slate-400">SpO2</span>
-                    </p>
-                    <p className="text-[9px] text-slate-500 mt-1 font-mono">Nominal: &gt;95%</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                      Blood Pressure
-                    </p>
-                    <p className="text-2xl font-black font-mono text-indigo-400 mt-1">
-                      {bp} <span className="text-xs font-normal text-slate-400">mmHg</span>
-                    </p>
-                    <p className="text-[9px] text-slate-500 mt-1 font-mono">Systolic/Diastolic</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800/90 relative overflow-hidden group">
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                      Body Temp
-                    </p>
-                    <p className="text-2xl font-black font-mono text-amber-400 mt-1">
-                      98.6 <span className="text-xs font-normal text-slate-400">°F</span>
-                    </p>
-                    <p className="text-[9px] text-slate-500 mt-1 font-mono">Normothermic</p>
-                  </div>
-                </div>
-
-                {/* Sweep-bar Continuous ECG Rhythm Screen */}
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800/90 space-y-2 relative overflow-hidden">
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <div className="flex items-center gap-2 text-rose-400">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                      <span className="font-bold">LEAD II // CONTINUOUS REAL-TIME VECTOR</span>
-                    </div>
-                    <span className="text-slate-500">SWEEP SPEED: 25mm/s</span>
-                  </div>
-
-                  {/* High-Precision ECG Waveform SVG with Film Sweep */}
-                  <div className="relative h-16 w-full overflow-hidden flex items-center bg-slate-950/90 rounded-lg border border-slate-900">
-                    <div
-                      className="absolute inset-0 opacity-15"
-                      style={{
-                        backgroundImage:
-                          'linear-gradient(rgba(244, 63, 94, 0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(244, 63, 94, 0.4) 1px, transparent 1px)',
-                        backgroundSize: '16px 16px',
-                      }}
-                    />
-
-                    <svg
-                      width="100%"
-                      height="48"
-                      viewBox="0 0 600 48"
-                      preserveAspectRatio="none"
-                      className="relative z-10 text-rose-400"
-                    >
-                      <motion.path
-                        d="M0,24 L60,24 L70,24 L75,10 L85,42 L95,6 L105,32 L115,24 L160,24 L210,24 L215,10 L225,42 L235,6 L245,32 L255,24 L300,24 L350,24 L355,10 L365,42 L375,6 L385,32 L395,24 L440,24 L490,24 L495,10 L505,42 L515,6 L525,32 L535,24 L600,24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        initial={{ pathOffset: 0 }}
-                        animate={{ pathOffset: [0, -1] }}
-                        transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
-                      />
-                    </svg>
-
-                    <motion.div
-                      animate={{ left: ['0%', '100%'] }}
-                      transition={{ duration: 3.5, repeat: Infinity, ease: 'linear' }}
-                      className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-rose-300 via-rose-500 to-transparent shadow-[0_0_12px_rgba(244,63,94,1)] pointer-events-none z-20"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeChannel === 'or' && (
-              <motion.div
-                key="or"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-4"
-              >
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">OR Suite 02: Angioplasty & Stenting</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Surgeon: Dr. Alexander Hayes • Anesthesiologist: Dr. Karen Vance
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse font-bold">
-                    IN-OPERATION
-                  </span>
-                </div>
-
-                <div className="space-y-2.5">
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-slate-200">Patient Prep & Anesthesia Induction</p>
-                      <p className="text-[10px] text-slate-400">OR-02 Baseline Vitals Verified</p>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">
-                      COMPLETE (08:30 AM)
-                    </span>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between border-l-2 border-l-cyan-400">
-                    <div>
-                      <p className="text-xs font-bold text-cyan-300">Coronary Stent Deployment</p>
-                      <p className="text-[10px] text-slate-400">Left Anterior Descending Artery (LAD)</p>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold animate-pulse">
-                      ACTIVE STEP (10:15 AM)
-                    </span>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-slate-300">Post-Op Recovery Room Transfer (PACU)</p>
-                      <p className="text-[10px] text-slate-400">Assigned Nurse: Sarah Jenkins</p>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
-                      SCHEDULED (11:45 AM)
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {activeChannel === 'oracle' && (
-              <motion.div
-                key="oracle"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="space-y-4"
-              >
-                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                      <Server className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Oracle 19c Relational Transaction Engine</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        22 Normalized Tables • Foreign Key Constraints Active
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 font-bold">
-                    ACID VERIFIED
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800">
-                    <p className="text-[10px] font-mono text-slate-400">Commit Latency</p>
-                    <p className="text-xl font-bold font-mono text-purple-400 mt-1">14.2 ms</p>
-                    <p className="text-[9px] text-slate-500">P99 SLA &lt; 25ms</p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800">
-                    <p className="text-[10px] font-mono text-slate-400">Txn Velocity</p>
-                    <p className="text-xl font-bold font-mono text-cyan-400 mt-1">1,420 /min</p>
-                    <p className="text-[9px] text-slate-500">Continuous Logging</p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800">
-                    <p className="text-[10px] font-mono text-slate-400">Active Locks</p>
-                    <p className="text-xl font-bold font-mono text-emerald-400 mt-1">0 Deadlocks</p>
-                    <p className="text-[9px] text-slate-500">Row-Level Locking</p>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-950 font-mono text-[11px] text-slate-400 border border-slate-800 space-y-1">
-                  <p className="text-cyan-400 font-bold">SQL&gt; EXECUTE DBMS_HMS_TRANSACTION.RECORD_VITALS;</p>
-                  <p className="text-slate-300">&gt; INSERT INTO PATIENT_VITALS (PAT_ID, PULSE, SPO2, STATUS) VALUES (&apos;PAT001&apos;, 74, 98, &apos;NOMINAL&apos;);</p>
-                  <p className="text-emerald-400">&gt; 1 ROW CREATED. COMMIT COMPLETE. [AUDIT RECORD GENERATED]</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Right Live Director Interaction Stage (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
-          <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-cyan-400" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                  Live Event Simulation Deck
-                </h4>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400">INTERACTIVE</span>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Test dynamic system response in real-time. Trigger simulated clinical state changes to
-              observe instant telemetry synchronization.
-            </p>
-
-            <div className="space-y-2">
-              <button
-                onClick={() => triggerSimulation('spike')}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-slate-950 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500/50 text-left text-xs font-semibold text-rose-300 flex items-center justify-between transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-400" />
-                  <span>Simulate Tachycardia Spike (112 BPM)</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => triggerSimulation('normal')}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-slate-950 hover:bg-emerald-950/40 border border-slate-800 hover:border-emerald-500/50 text-left text-xs font-semibold text-emerald-300 flex items-center justify-between transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Restore Normal Sinus Baseline (74 BPM)</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
-              </button>
-
-              <button
-                onClick={() => triggerSimulation('commit')}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-slate-950 hover:bg-purple-950/40 border border-slate-800 hover:border-purple-500/50 text-left text-xs font-semibold text-purple-300 flex items-center justify-between transition-all cursor-pointer group"
-              >
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-purple-400" />
-                  <span>Execute Oracle ACID Commit Log</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-
-            {/* Simulation Feedback Alert */}
-            <AnimatePresence>
-              {simMessage && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="p-3 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs font-mono flex items-center gap-2"
-                >
-                  <Zap className="w-4 h-4 text-cyan-400 shrink-0 animate-bounce" />
-                  <span className="leading-snug">{simMessage}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Quick Launch Deep Link */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-slate-800 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-white">Direct Clinical Dashboard Access</p>
-              <p className="text-[10px] text-slate-400">Authenticated demo doctor session ready</p>
-            </div>
-            <Link href="/login">
-              <Button className="h-9 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 rounded-lg cursor-pointer">
-                Enter Portal →
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// MAIN CINEMATIC HOME COMPONENT
+// MAIN HOME PAGE COMPONENT
 // ============================================================================
 export default function HomePage() {
   const [activePortalTab, setActivePortalTab] = useState<'doctor' | 'patient' | 'admin'>('doctor');
   const [activeNav, setActiveNav] = useState<string>('hero');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
-  const [liveTimecode, setLiveTimecode] = useState('00:00:00:00');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Direct 1:1 scroll progress without laggy spring
   const { scrollYProgress } = useScroll();
 
   // High-performance rAF-throttled scroll spy for instant, jitter-free active nav pill tracking
   useEffect(() => {
-    const sectionIds = ['hero', 'telemetry', 'portals', 'architecture', 'security'];
+    const sectionIds = ['hero', 'portals', 'architecture', 'security'];
     let rafId: number | null = null;
 
     const updateActiveSection = () => {
@@ -537,33 +106,21 @@ export default function HomePage() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     updateActiveSection(); // Initialize on mount
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 
-  // Real-time movie timecode simulation (HH:MM:SS:FF)
-  useEffect(() => {
-    const updateTimer = () => {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      const ff = String(Math.floor((now.getMilliseconds() / 1000) * 60)).padStart(2, '0');
-      setLiveTimecode(`${hh}:${mm}:${ss}:${ff}`);
-    };
-    const timer = setInterval(updateTimer, 50);
-    return () => clearInterval(timer);
-  }, []);
-
   // Smooth scroll handler with persistent fixed header offset compensation
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     setActiveNav(id);
+    setMobileMenuOpen(false);
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 70;
+      const headerOffset = 72;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
@@ -605,7 +162,7 @@ export default function HomePage() {
     },
     patient: {
       title: 'Patient Personal Health Portal',
-      subtitle: 'Self-service medical records, prescription instructions & vital telemetry tracker',
+      subtitle: 'Self-service medical records, prescription instructions & vital biometric tracker',
       badge: 'Patient Self-Service',
       accentBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
       icon: Users,
@@ -649,14 +206,14 @@ export default function HomePage() {
   const PortalIcon = currentPortal.icon;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 relative overflow-x-hidden">
       {/* Top 1:1 Instant Scroll Progress Indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 z-50 origin-left pointer-events-none transform-gpu will-change-transform shadow-[0_0_10px_rgba(34,211,238,0.8)]"
         style={{ scaleX: scrollYProgress, transformOrigin: '0%' }}
       />
 
-      {/* Background Architectural Grid & Precision Laser Scan Lines */}
+      {/* Background Architectural Grid & Subtle Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -691,14 +248,13 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Smooth Scroll Chapter Navigation Links with Real-Time Pill Slide */}
+          {/* Desktop Smooth Scroll Navigation Links with Spring Pill */}
           <nav className="hidden md:flex items-center gap-1 bg-slate-900/80 p-1 rounded-full border border-slate-800/90 text-xs font-semibold text-slate-400">
             {[
               { id: 'hero', label: 'Overview' },
-              { id: 'telemetry', label: 'Live Telemetry' },
               { id: 'portals', label: 'Clinical Portals' },
-              { id: 'architecture', label: 'Oracle Architecture' },
-              { id: 'security', label: 'Security & HIPAA' },
+              { id: 'architecture', label: 'Architecture' },
+              { id: 'security', label: 'HIPAA & Security' },
             ].map((navItem) => {
               const isActive = activeNav === navItem.id;
               return (
@@ -714,7 +270,7 @@ export default function HomePage() {
                     <motion.div
                       layoutId="activeNavIndicator"
                       className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.15)]"
-                      transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
+                      transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                     />
                   )}
                   <span className="relative z-10">{navItem.label}</span>
@@ -723,28 +279,79 @@ export default function HomePage() {
             })}
           </nav>
 
-          {/* Right Action & Film Timecode Status */}
-          <div className="flex items-center gap-3.5">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-mono">
+          {/* Right Action & System Status */}
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] text-slate-300 font-medium">
-                REC <span className="text-cyan-400">{liveTimecode}</span>
+                ORACLE 19c: <span className="text-emerald-400 font-bold">ONLINE</span>
               </span>
             </div>
 
             <Link href="/login">
-              <Button className="h-9 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 rounded-lg cursor-pointer">
-                Access Portals →
+              <Button className="h-9 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 rounded-lg cursor-pointer flex items-center gap-1.5 transition-all">
+                <span>Access Portals</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
+
+            {/* Mobile Menu Toggle Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Navigation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl px-4 py-4 space-y-2"
+            >
+              {[
+                { id: 'hero', label: 'Overview' },
+                { id: 'portals', label: 'Clinical Portals' },
+                { id: 'architecture', label: 'Architecture' },
+                { id: 'security', label: 'HIPAA & Security' },
+              ].map((navItem) => (
+                <a
+                  key={navItem.id}
+                  href={`#${navItem.id}`}
+                  onClick={(e) => scrollToSection(e, navItem.id)}
+                  className={`block px-3 py-2 rounded-lg text-sm font-semibold ${
+                    activeNav === navItem.id
+                      ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30'
+                      : 'text-slate-300 hover:bg-slate-900'
+                  }`}
+                >
+                  {navItem.label}
+                </a>
+              ))}
+              <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                <span className="text-xs text-slate-400 font-mono">Oracle 19c Engine</span>
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="h-8 px-3 bg-cyan-500 text-slate-950 font-bold text-xs rounded-md">
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Main Content Stage */}
       <main className="relative z-10 pt-16">
         {/* ========================================================================= */}
-        {/* SCENE 01: HERO SECTION (STABLE, SMOOTH & RESPONSIVE)                      */}
+        {/* SCENE 01: HERO SECTION                                                   */}
         {/* ========================================================================= */}
         <section
           id="hero"
@@ -757,12 +364,12 @@ export default function HomePage() {
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.15)] text-xs font-semibold text-cyan-300"
               >
                 <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 <span className="font-mono text-[11px] uppercase tracking-wider">
-                  SCENE 01 // ENTERPRISE CLINICAL PLATFORM
+                  ENTERPRISE CLINICAL HEALTHCARE PLATFORM
                 </span>
               </motion.div>
 
@@ -771,8 +378,8 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
-                  duration: 0.6,
-                  delay: 0.1,
+                  duration: 0.5,
+                  delay: 0.08,
                   ease: [0.16, 1, 0.3, 1],
                 }}
                 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]"
@@ -781,44 +388,44 @@ export default function HomePage() {
                 <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(34,211,238,0.35)] inline-block">
                   Clinical EHR
                 </span>{' '}
-                & Patient Telemetry
+                & Patient Care
               </motion.h1>
 
               {/* Sub-headline */}
               <motion.p
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
                 className="text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed"
               >
-                An integrated platform engineered for hospital departments, clinical physicians, and
-                patients. Backed by Oracle enterprise transactions, real-time vital charting, and
-                strict session security.
+                An integrated platform engineered for hospital administration, clinical physicians,
+                and patients. Powered by Oracle enterprise transactions, EHR records, and strict HIPAA
+                session security.
               </motion.p>
 
               {/* Action Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-wrap items-center gap-4 pt-1"
               >
                 <Link href="/login">
-                  <Button className="h-12 px-7 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/25 rounded-xl cursor-pointer flex items-center gap-2">
+                  <Button className="h-12 px-7 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/25 rounded-xl cursor-pointer flex items-center gap-2 transition-all">
                     <Sparkles className="w-4 h-4" />
-                    Launch Live Portals
+                    <span>Launch Live Portals</span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </Link>
                 <a
-                  href="#telemetry"
-                  onClick={(e) => scrollToSection(e, 'telemetry')}
+                  href="#portals"
+                  onClick={(e) => scrollToSection(e, 'portals')}
                 >
                   <Button
                     variant="outline"
-                    className="h-12 px-6 bg-slate-900/60 hover:bg-slate-800 text-slate-200 border-slate-700 text-sm font-semibold rounded-xl cursor-pointer"
+                    className="h-12 px-6 bg-slate-900/60 hover:bg-slate-800 text-slate-200 border-slate-700 text-sm font-semibold rounded-xl cursor-pointer transition-all"
                   >
-                    Explore Telemetry ↓
+                    Explore Clinical Portals ↓
                   </Button>
                 </a>
               </motion.div>
@@ -827,7 +434,7 @@ export default function HomePage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.32 }}
                 className="pt-2 grid grid-cols-2 gap-3 text-xs text-slate-400 font-medium max-w-lg"
               >
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800/80">
@@ -849,11 +456,11 @@ export default function HomePage() {
               </motion.div>
             </div>
 
-            {/* RIGHT SIDE (50%): 3D SPLINE ROBOT (STABLE CONTAINER, NO JANK) */}
+            {/* RIGHT SIDE (50%): 3D SPLINE ROBOT */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-6 relative w-full h-[480px] sm:h-[560px] lg:h-[620px] flex items-center justify-center overflow-visible select-none isolate transform-gpu"
             >
               {/* Anamorphic Horizon Line Flare */}
@@ -867,7 +474,7 @@ export default function HomePage() {
 
               <div className="absolute bottom-6 right-6 z-20 pointer-events-none hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-emerald-500/30 font-mono text-[10px] text-emerald-300 backdrop-blur-sm">
                 <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                <span>LATENCY: 4.2ms // 60 FPS</span>
+                <span>SYSTEM STATUS: OPERATIONAL</span>
               </div>
 
               {/* Full 3D Interactive Spline Robot */}
@@ -880,43 +487,7 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* SCENE 02: DEDICATED LIVE CLINICAL TELEMETRY COMMAND CENTER               */}
-        {/* ========================================================================= */}
-        <section
-          id="telemetry"
-          className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.6 }}
-            className="text-center space-y-3 mb-12"
-          >
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              SCENE 02 // MULTI-CHANNEL TELEMETRY
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-              Continuous Patient Telemetry & Operational Flow
-            </h2>
-            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
-              Real-time synchronization across patient biometrics, active surgical queues, and
-              Oracle ACID database transactions.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <CinematicTelemetryCenter />
-          </motion.div>
-        </section>
-
-        {/* ========================================================================= */}
-        {/* SCENE 03: 3-TIER OPERATIONAL WORKSPACES (DOCTOR / PATIENT / ADMIN)        */}
+        {/* SCENE 02: 3-TIER OPERATIONAL WORKSPACES (DOCTOR / PATIENT / ADMIN)        */}
         {/* ========================================================================= */}
         <section
           id="portals"
@@ -926,11 +497,11 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             className="text-center space-y-3 mb-12"
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              SCENE 03 // ROLE-BASED WORKSPACES
+              ROLE-BASED CLINICAL WORKSPACES
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
               Three Dedicated Environments. One Hospital System.
@@ -946,7 +517,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
             className="flex justify-center mb-8"
           >
             <div className="p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl flex gap-1.5 relative">
@@ -967,7 +538,7 @@ export default function HomePage() {
                       <motion.div
                         layoutId="activePortalTabPill"
                         className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/30"
-                        transition={{ type: 'spring', stiffness: 500, damping: 32, mass: 0.6 }}
+                        transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-2">
@@ -984,10 +555,10 @@ export default function HomePage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activePortalTab}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="max-w-5xl mx-auto"
             >
               <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950 border border-slate-800 shadow-2xl space-y-8">
@@ -1010,7 +581,7 @@ export default function HomePage() {
                   </div>
 
                   <Link href="/login">
-                    <Button className="h-11 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 rounded-xl cursor-pointer flex items-center gap-2">
+                    <Button className="h-11 px-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/20 rounded-xl cursor-pointer flex items-center gap-2 transition-all">
                       <span>Launch Portal Demo</span>
                       <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -1089,7 +660,7 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* SCENE 04: TECHNICAL ARCHITECTURE BENTO GRID                               */}
+        {/* SCENE 03: TECHNICAL ARCHITECTURE BENTO GRID                               */}
         {/* ========================================================================= */}
         <section
           id="architecture"
@@ -1099,11 +670,11 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             className="text-center space-y-3 mb-14"
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              SCENE 04 // SYSTEM ARCHITECTURE
+              ENTERPRISE ARCHITECTURE
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
               Enterprise Resilience & Clinical Precision
@@ -1139,7 +710,7 @@ export default function HomePage() {
               </SpotlightCard>
             </motion.div>
 
-            {/* Bento Card 2: Vital Telemetry */}
+            {/* Bento Card 2: EHR & Vitals */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1151,10 +722,10 @@ export default function HomePage() {
                   <div className="p-3 w-fit rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
                     <HeartPulse className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-white">Continuous Vital Telemetry</h3>
+                  <h3 className="text-base font-bold text-white">Clinical EHR & Vitals Charting</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Tracks heart pulse, blood pressure, respiration, body temp, and oxygen saturation with
-                    automated normal range validation.
+                    Tracks pulse, blood pressure, respiration, body temp, and SpO2 alongside allergy records
+                    and diagnostic requisitions.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-rose-400 font-semibold">
@@ -1187,28 +758,26 @@ export default function HomePage() {
               </SpotlightCard>
             </motion.div>
 
-            {/* Bento Card 4: Security & Session Isolation */}
+            {/* Bento Card 4: Operations & Payroll */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              id="security"
-              className="scroll-mt-20"
             >
               <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="p-3 w-fit rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                    <Lock className="w-5 h-5" />
+                    <Building2 className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-white">HIPAA Session Security</h3>
+                  <h3 className="text-base font-bold text-white">Hospital Operations & Payroll</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    15-minute inactivity auto-logout, true browser session cookies, sleep/suspend
-                    detection, and strict role authorization.
+                    Multi-department staff payroll disbursal, operating room scheduling, equipment asset
+                    maintenance, and audit logging.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-cyan-400 font-semibold">
-                  • Auto Invalidation & True Cookies
+                  • Enterprise Administration
                 </div>
               </SpotlightCard>
             </motion.div>
@@ -1216,13 +785,111 @@ export default function HomePage() {
         </section>
 
         {/* ========================================================================= */}
-        {/* SCENE 05: CINEMATIC CALL TO ACTION BANNER                                 */}
+        {/* SCENE 04: HIPAA SECURITY & SESSION GOVERNANCE                             */}
+        {/* ========================================================================= */}
+        <section
+          id="security"
+          className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900 scroll-mt-20"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-3 mb-14"
+          >
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+              SECURITY & COMPLIANCE
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              HIPAA Session Security & Zero-Trust Architecture
+            </h2>
+            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
+              Built with multi-layered defenses to safeguard Protected Health Information (PHI) and
+              enforce role-based access control.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+            >
+              <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="p-3 w-fit rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">15-Minute Inactivity Auto-Logout</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Automated activity tracking invalidates clinical sessions after 15 minutes of idle
+                    time, preventing unauthorized terminal access in busy wards.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-cyan-400 font-semibold">
+                  • Inactivity Protection
+                </div>
+              </SpotlightCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="p-3 w-fit rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Key className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">True HttpOnly Browser Session Cookies</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Session tokens are stored exclusively in HttpOnly, SameSite cookies that cannot be
+                    accessed by client-side scripts, neutralizing XSS credential theft.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-emerald-400 font-semibold">
+                  • XSS & Injection Immunity
+                </div>
+              </SpotlightCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+            >
+              <SpotlightCard className="p-6 space-y-4 h-full flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="p-3 w-fit rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">Role-Based Access Control (RBAC)</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Strict cryptographic session verification ensures doctors, patients, and admins can only
+                    access their authorized clinical datasets and operational endpoints.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-800/80 text-[11px] font-mono text-purple-400 font-semibold">
+                  • Zero-Trust Isolation
+                </div>
+              </SpotlightCard>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* SCENE 05: CALL TO ACTION BANNER                                           */}
         {/* ========================================================================= */}
         <motion.section
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900"
         >
           <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-slate-900/90 via-slate-950 to-slate-950 border border-cyan-500/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
@@ -1230,7 +897,7 @@ export default function HomePage() {
 
             <div className="space-y-2 text-center md:text-left">
               <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest font-bold">
-                SCENE 05 // SYSTEM ENTRY
+                SYSTEM ENTRY
               </span>
               <h3 className="text-2xl sm:text-3xl font-bold text-white">
                 Ready to Experience the Clinical Platform?
@@ -1243,7 +910,7 @@ export default function HomePage() {
 
             <div className="flex items-center gap-4">
               <Link href="/login">
-                <Button className="h-12 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/25 rounded-xl cursor-pointer flex items-center gap-2">
+                <Button className="h-12 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-slate-950 font-bold text-sm shadow-xl shadow-cyan-500/25 rounded-xl cursor-pointer flex items-center gap-2 transition-all">
                   <span>Sign In to System</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>

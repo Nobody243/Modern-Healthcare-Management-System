@@ -53,39 +53,11 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
       const e = pendingEvent;
       pendingEvent = null;
 
-      // Update normalized motion values [-1, 1] without re-rendering React component
+      // Update normalized motion values [-1, 1] for smooth GPU 3D perspective tilt
       const normX = (e.clientX / window.innerWidth) * 2 - 1;
       const normY = (e.clientY / window.innerHeight) * 2 - 1;
       mouseX.set(normX);
       mouseY.set(normY);
-
-      // Forward event to Spline canvas if pointer is outside canvas bounds
-      if (containerRef.current) {
-        const canvas = containerRef.current.querySelector('canvas');
-        if (canvas) {
-          const rect = canvas.getBoundingClientRect();
-          const isDirectlyOver =
-            e.clientX >= rect.left &&
-            e.clientX <= rect.right &&
-            e.clientY >= rect.top &&
-            e.clientY <= rect.bottom;
-
-          if (!isDirectlyOver) {
-            const syntheticPointer = new PointerEvent('pointermove', {
-              clientX: e.clientX,
-              clientY: e.clientY,
-              screenX: e.screenX,
-              screenY: e.screenY,
-              bubbles: false,
-              cancelable: true,
-              pointerId: 1,
-              pointerType: 'mouse',
-              isPrimary: true,
-            });
-            canvas.dispatchEvent(syntheticPointer);
-          }
-        }
-      }
 
       rafRef.current = null;
     };
