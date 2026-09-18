@@ -1,6 +1,6 @@
 # CureWell HMS - Modern Healthcare Management System
 
-CureWell HMS is an enterprise hospital information and clinical management platform built with Next.js 16 App Router, React 19, Oracle Database 19c, and an interactive 3D WebGL engine. Designed for hospital networks, clinical practitioners, and patients, the platform delivers unified electronic health records (EHR), real-time clinical telemetry, surgical queue coordination, pharmacy inventory control, departmental payroll disbursals, and multi-tenant role-based access control.
+CureWell HMS is an enterprise hospital information and clinical management platform built with Next.js 16.3.5 App Router (Turbopack), React 19, Oracle Database 19c (Cloud Autonomous & On-Premises), and an interactive 3D WebGL engine. Designed for hospital networks, clinical practitioners, and patients, the platform delivers unified electronic health records (EHR), surgical queue coordination, pharmacy inventory control, departmental payroll disbursals, HIPAA-compliant session governance, and multi-tenant role-based access control.
 
 ---
 
@@ -12,14 +12,14 @@ CureWell HMS is an enterprise hospital information and clinical management platf
    - [Clinical Doctor Portal](#1-clinical-doctor-portal-doctor)
    - [Patient Health Portal](#2-patient-health-portal-patient)
    - [Enterprise Administrator Portal](#3-enterprise-administrator-portal-admin)
-4. [Interactive 3D Interface and Live Clinical Telemetry](#interactive-3d-interface-and-live-clinical-telemetry)
-5. [Relational Database Architecture (Oracle 19c)](#relational-database-architecture-oracle-19c)
+4. [Interactive 3D Interface and High-Performance Frontend](#interactive-3d-interface-and-high-performance-frontend)
+5. [Relational Database Architecture (Oracle 19c & Cloud Autonomous)](#relational-database-architecture-oracle-19c--cloud-autonomous)
    - [Schema Design and Normalization](#schema-design-and-normalization)
    - [Complete Table Dictionary (22 Tables)](#complete-table-dictionary-22-tables)
-   - [Database Sequences and Automated Triggers](#database-sequences-and-automated-triggers)
-   - [Materialized Views and Aggregations](#materialized-views-and-aggregations)
+   - [Database Sequences, Triggers and 3NF Views](#database-sequences-triggers-and-3nf-views)
+   - [Master Schema & Seed Script](#master-schema--seed-script)
 6. [Security and Access Control Architecture](#security-and-access-control-architecture)
-7. [API Route Directory](#api-route-directory)
+7. [API Route Directory (46 REST Handlers)](#api-route-directory-46-rest-handlers)
 8. [Demo Accounts and Deletion Protection Policy](#demo-accounts-and-deletion-protection-policy)
 9. [Installation and Environment Configuration](#installation-and-environment-configuration)
 10. [Available Scripts](#available-scripts)
@@ -30,15 +30,15 @@ CureWell HMS is an enterprise hospital information and clinical management platf
 
 ## Executive Summary and Core Capabilities
 
-CureWell HMS bridges clinical medicine, hospital administration, and patient self-service into a singular, high-performance web application. Key highlights include:
+CureWell HMS bridges clinical medicine, hospital administration, and patient self-service into a singular, high-performance web application:
 
-- Multi-tenant role-based access control with distinct operational boundaries for Doctors, Patients, and Administrators.
-- Real-time clinical telemetry with live vital signs recording and animated ECG monitoring.
-- Interactive 3D robotic assistance powered by Spline and Framer Motion with global pointer tracking and hardware acceleration.
-- Electronic Health Records (EHR) covering diagnoses, medical history, lab requisitions, and surgical workflows.
-- Full-spectrum hospital operations including staff payroll processing, pharmacy batch management, and equipment asset tracking.
-- Enterprise-grade Oracle 19c database backend engineered in Third Normal Form (3NF) with parameterized queries and ACID transaction safety.
-- Automated demo protection guards preventing accidental deletion of sample seed data while allowing full CRUD evaluation.
+- **Multi-Tenant RBAC Boundaries:** Isolated workflows and data privacy for Doctors, Patients, and Administrators.
+- **Electronic Health Records (EHR):** Comprehensive clinical charting covering diagnoses, longitudinal medical history, allergy tracking, and multi-parametric vital signs.
+- **Operating Room & Surgical Scheduling:** Surgical procedure coordination, duration estimates, surgeon assignments, and pre-op documentation.
+- **Interactive 3D Medical Assistant:** Real-time 3D robot model integrated via Spline with GPU-accelerated cursor tracking and ambient glowing halo follower.
+- **Hospital Operations & Governance:** Departmental staff payroll disbursal, pharmacy batch LOT inventory control, equipment asset tracking, and clinical audit logging.
+- **Oracle Cloud Autonomous Integration:** Ephemeral in-memory wallet extraction (`adm-zip`) with zero committed secrets and connection pooling (`queueTimeout: 5000ms`, `poolTimeout: 30s`).
+- **HIPAA-Compliant Security:** Automatic 15-minute inactivity session termination, SameSite=Strict HttpOnly session cookies, and demo deletion guards.
 
 ---
 
@@ -46,15 +46,15 @@ CureWell HMS bridges clinical medicine, hospital administration, and patient sel
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
-| **Framework** | Next.js 16.0.6 (Turbopack) | Server Components, Route Handlers, App Router |
-| **Frontend Library** | React 19.0.0 | Client interactivity, state management, Suspense |
+| **Framework** | Next.js 16.3.5 (Turbopack) | Server Components, Route Handlers, App Router, Dynamic Rendering |
+| **Frontend Library** | React 19.0.0 | Concurrent React, Server Actions, Suspense |
 | **Language** | TypeScript 5.x | Strict static typing across models, routes, and components |
-| **Database** | Oracle Database 19c | Relational core with sequences, triggers, constraints |
-| **Database Driver** | `oracledb` 6.6.0 | Oracle connection pooling and parameterized query execution |
-| **Styling** | Tailwind CSS 4.0 | Utility-first responsive styling and custom design system |
-| **UI Components** | shadcn/ui | Radix UI primitives, accessible dialogs, dropdowns, tables |
-| **3D Engine** | Spline 3D (`@splinetool/react-spline`) | Interactive WebGL robot scene with runtime event binding |
-| **Animations** | Framer Motion 12.x | Physics-based spring animations, layout transitions |
+| **Database** | Oracle Database 19c / Autonomous Cloud | Relational core with sequences, triggers, foreign keys, and 3NF views |
+| **Database Driver** | `oracledb` 6.9.0 & `adm-zip` | Ephemeral cloud wallet connection pooling and parameterized query execution |
+| **Styling** | Tailwind CSS 4.0 | Utility-first responsive styling and custom design tokens |
+| **UI Components** | shadcn/ui & Radix UI | Accessible dialogs, dropdowns, tables, and form controls |
+| **3D Engine** | Spline 3D (`@splinetool/react-spline`) | WebGL robot scene with runtime pointer tracking and parallax tilt |
+| **Animations** | Framer Motion 12.x | Physics-based spring animations, GPU transforms, layout morphing |
 | **Icons** | Lucide React | Clean, scalable vector iconography |
 | **Authentication** | `jose` (JWT) and `bcryptjs` | Signed JWT session cookies and secure password hashing |
 
@@ -65,54 +65,49 @@ CureWell HMS bridges clinical medicine, hospital administration, and patient sel
 The application enforces strict domain isolation across three specialized role-based portals:
 
 ### 1. Clinical Doctor Portal (`/doctor/*`)
-Designed for attending physicians, surgeons, and specialists:
-- **Patient Rosters**: Comprehensive directory of assigned inpatients and outpatients with active diagnoses and allergy alerts.
-- **Biometric Vitals Recording**: Time-series capture and graphing of blood pressure, pulse rate, SpO2 blood oxygen, body temperature, and respiration rate.
-- **Surgical Scheduling**: Schedule surgical procedures, assign operating rooms (OR-1 through OR-4), document surgical teams, and track intra-operative progress.
-- **Electronic Prescribing**: Formulate prescriptions with precise dosage, administration route, frequency, and duration with automated routing to the hospital pharmacy.
-- **Diagnostic Laboratory Orders**: Requisition lab panels (CMP, CBC, Lipid Panels, Cardiac Troponins) and review verified pathologist findings.
-- **Departmental Patient Transfers**: Coordinate inter-departmental transfers across ICU, Cardiology, Oncology, Surgery, and General wards.
+Designed for attending physicians, surgeons, and clinical specialists:
+- **Patient Rosters:** Comprehensive directory of assigned inpatients and outpatients with active diagnoses and allergy alerts.
+- **Biometric Vitals Recording:** Time-series capture and graphing of blood pressure, pulse rate, SpO2 blood oxygen, body temperature, and respiration rate.
+- **Surgical Scheduling:** Schedule surgical procedures, assign operating rooms (OR-1 through OR-4), document surgical teams, and track intra-operative progress.
+- **Electronic Prescribing:** Formulate prescriptions with precise dosage, administration route, frequency, and duration with automated routing to the hospital pharmacy.
+- **Diagnostic Laboratory Orders:** Requisition lab panels (CMP, CBC, Lipid Panels, Cardiac Troponins) and review verified pathologist findings.
+- **Departmental Patient Transfers:** Coordinate inter-departmental transfers across ICU, Cardiology, Oncology, Surgery, and General wards.
 
 ### 2. Patient Health Portal (`/patient/*`)
 Designed for patient self-service and digital health records:
-- **Clinical Health Summary**: Overview of assigned primary physicians, active care plans, and upcoming consultations.
-- **Digital Prescription Wallet**: Review current medications, dosage instructions, prescribing doctor information, and refill schedules.
-- **Biometric Vitals History**: Longitudinal historical logs of vital signs with interactive trend visualization.
-- **Laboratory Results**: Verified diagnostic laboratory reports with normal reference ranges and doctor recommendations.
-- **Surgical and Procedure History**: Post-operative care guidelines, discharge summaries, and recovery milestones.
-- **Profile and Credentials Management**: Contact updates and secure password management.
+- **Clinical Health Summary:** Overview of assigned primary physicians, active care plans, and upcoming consultations.
+- **Digital Prescription Wallet:** Review current medications, dosage instructions, prescribing doctor information, and refill schedules.
+- **Biometric Vitals History:** Longitudinal historical logs of vital signs with interactive trend visualization.
+- **Laboratory Results:** Verified diagnostic laboratory reports with normal reference ranges and doctor recommendations.
+- **Surgical and Procedure History:** Post-operative care guidelines, discharge summaries, and recovery milestones.
+- **Profile and Credentials Management:** Contact updates and secure password management.
 
 ### 3. Enterprise Administrator Portal (`/admin/*`)
 Designed for hospital operations directors and executive management:
-- **Departmental Staff Payroll**: Monthly salary processing, tax deductions, clinical allowances, and payment voucher generation.
-- **Pharmacy Stock Management**: SKU tracking, batch identification, unit pricing, real-time stock levels, and expiration alerts.
-- **Hospital Assets and Equipment**: Lifecycle management for high-value medical devices (MRI machines, ventilators, infusion pumps, defibrillators) including maintenance logs and warranty tracking.
-- **Doctor and Patient Accounts**: Staff credentialing, licensing verification, department assignments, and patient registration.
-- **Vendor and Supplier Relations**: Contract records, distributor contact details, and supply category management.
-- **System Telemetry and Audit Logs**: Oracle transaction latency monitoring, session access logs, and security audit trails.
+- **Departmental Staff Payroll:** Monthly salary processing, tax deductions, clinical allowances, and payment voucher generation.
+- **Pharmacy Stock Management:** SKU tracking, batch identification, unit pricing, real-time stock levels, and expiration alerts.
+- **Hospital Assets and Equipment:** Lifecycle management for high-value medical devices (MRI machines, ventilators, infusion pumps, defibrillators) including maintenance logs and warranty tracking.
+- **Doctor and Patient Accounts:** Staff credentialing, licensing verification, department assignments, and patient registration.
+- **Vendor and Supplier Relations:** Contract records, distributor contact details, and supply category management.
+- **System Telemetry and Audit Logs:** Oracle transaction latency monitoring, session access logs, and security audit trails.
 
 ---
 
-## Interactive 3D Interface and Live Clinical Telemetry
+## Interactive 3D Interface and High-Performance Frontend
 
 ### 3D Robotic Assistant Interface
 The landing page incorporates an interactive 3D WebGL medical android integrated via `@splinetool/react-spline` and Framer Motion:
-- **Global Cursor Tracking**: An optimized `requestAnimationFrame` pointer listener on the browser window forwards mouse coordinates to the Spline canvas regardless of cursor position, ensuring responsive tracking across the entire viewport.
-- **Spring Parallax Physics**: The container applies subtle 3D perspective rotation (`rotateY`, `rotateX`) responding to cursor offset with zero layout shift.
-- **Smooth Loading Lifecycle**: Double-buffered WebGL texture loading prevents initial blank render flashes with a smooth ease-in opacity transition.
-
-### Dedicated Clinical Telemetry Command Center
-Directly underneath the hero section, a dedicated operational telemetry dashboard displays live data streams:
-- **Continuous Vitals Stream**: Heart pulse (72 BPM with animated SVG ECG rhythm), SpO2 (98%), Blood Pressure (120/80 mmHg), and Body Temp (98.6 deg F).
-- **Physician Queue**: Live consultation status, operating room status (Angioplasty in OR-2), and scheduled appointments.
-- **Oracle Database Metrics**: Active table synchronization, pharmacy fulfillment rates, and ACID commit latencies (18ms).
+- **Global Cursor Tracking:** An optimized `requestAnimationFrame` pointer listener on the browser window forwards mouse coordinates to the Spline canvas, ensuring fluid 3D head and eye tracking across the entire viewport.
+- **Spring Parallax Tilt:** The container applies subtle 3D perspective rotation (`rotateY`, `rotateX`) responding to cursor offset with zero layout shift.
+- **Ambient GPU Cursor Glow:** A zero-rerender `CursorGlow` component provides a cinematic glowing halo that follows cursor movement with spring kinematics.
+- **Active Navigation Pill:** Sticky navbar with layout-morphed active section indicator (`layoutId="activeNavIndicator"`), smooth fixed-header offset scrolling, and responsive mobile drawer navigation.
 
 ---
 
-## Relational Database Architecture (Oracle 19c)
+## Relational Database Architecture (Oracle 19c & Cloud Autonomous)
 
 ### Schema Design and Normalization
-The database schema is designed in Third Normal Form (3NF) to eliminate transitive dependencies, ensure referential integrity, and maximize query performance across clinical workflows.
+The database schema is engineered in Third Normal Form (3NF) to eliminate transitive dependencies, ensure referential integrity, and maximize query performance across clinical workflows.
 
 ```
 +----------------+       +-------------------+       +---------------+
@@ -121,7 +116,7 @@ The database schema is designed in Third Normal Form (3NF) to eliminate transiti
         |                          |                         |
         |---< HIS_VITALS           |---< HIS_SURGERY         |---< HIS_PAYROLLS
         |---< HIS_LABORATORY       |---< HIS_TRANSFERS       |
-        >---< HIS_PRESCRIPTONS >---+---< HIS_PHARMACEUTICALS
+        >---< HIS_PRESCRIPTIONS >--+---< HIS_PHARMACEUTICALS
 ```
 
 ### Complete Table Dictionary (22 Tables)
@@ -132,63 +127,73 @@ The database schema is designed in Third Normal Form (3NF) to eliminate transiti
 | 2 | `HIS_DOCS` | `DOC_ID` | Clinical physicians, specialty departments, licensing numbers |
 | 3 | `HIS_PATIENTS` | `PAT_ID` | Registered patient demographics, contact details, medical history |
 | 4 | `HIS_VITALS` | `VIT_ID` | Time-series patient biometric readings (BP, pulse, SpO2, temp) |
-| 5 | `HIS_PRESCRIPTONS` | `PRES_ID` | Physician prescription records, clinical dosages, duration |
+| 5 | `HIS_PRESCRIPTIONS` | `PRES_ID` | Physician prescription records, clinical dosages, duration |
 | 6 | `HIS_PHARMACEUTICALS` | `PHAR_ID` | Medicine inventory, batch tracking, stock counts, pricing |
-| 7 | `HIS_PHARMACEUTICALS_CATEGORY` | `PHAR_CAT_ID` | Drug classifications and pharmaceutical categories |
+| 7 | `HIS_PHARMACEUTICALS_CATEGORIES` | `PHARM_CAT_ID` | Drug classifications and pharmaceutical categories |
 | 8 | `HIS_LABORATORY` | `LAB_ID` | Diagnostic lab test orders, specimen records, pathologist findings |
 | 9 | `HIS_SURGERY` | `SURG_ID` | Operating room scheduling, surgical teams, operative logs |
-| 10 | `HIS_PATIENT_TRANSFERS` | `T_ID` | Inter-departmental patient movement and transfer approvals |
+| 10 | `HIS_PATIENT_TRANSFER` | `PT_ID` | Inter-departmental patient movement and transfer approvals |
 | 11 | `HIS_MEDICAL_RECORDS` | `MDR_ID` | Longitudinal patient clinical consultation documentation |
 | 12 | `HIS_PAYROLLS` | `PAY_ID` | Staff monthly salary disbursals, deductions, allowances |
-| 13 | `HIS_EQUIPMENTS` | `EQ_ID` | Medical devices, ventilators, monitors, maintenance logs |
-| 14 | `HIS_ASSETS` | `AS_ID` | Hospital physical infrastructure assets and valuations |
+| 13 | `HIS_EQUIPMENTS` | `EQP_ID` | Medical devices, ventilators, monitors, maintenance logs |
+| 14 | `HIS_ASSETS` | `ASST_ID` | Hospital physical infrastructure assets and valuations |
 | 15 | `HIS_ACCOUNTS` | `ACC_ID` | Financial ledger, billing records, operational revenue |
 | 16 | `HIS_VENDOR` | `V_ID` | Pharmaceutical suppliers, equipment vendors, contact records |
-| 17 | `HIS_USER_ACCOUNTS` | `USER_ID` | Unified multi-tenant authentication credentials and hashes |
+| 17 | `HIS_USERS` | `USER_ID` | Unified multi-tenant authentication credentials and hashes |
 | 18 | `HIS_ROLES` | `ROLE_ID` | RBAC role definitions (Admin, Doctor, Patient) |
 | 19 | `HIS_PRIVILEGES` | `PRIV_ID` | Fine-grained system permissions |
 | 20 | `HIS_ROLE_PRIVILEGES` | `RP_ID` | Mapping table connecting roles to system privileges |
 | 21 | `HIS_USER_ROLES` | `UR_ID` | Mapping table connecting user accounts to specific roles |
 | 22 | `HIS_PWDRESETS` | `ID` | Password reset tokens and expiration tracking |
 
-### Database Sequences and Automated Triggers
-Every primary table utilizes a dedicated Oracle sequence (`HIS_*_SEQ`) coupled with a `BEFORE INSERT` trigger to guarantee gapless, collision-free auto-incrementing identifiers without client-side coordination.
+### Database Sequences, Triggers and 3NF Views
+- **Auto-Increment Identity:** Every primary table uses an Oracle sequence (`HIS_*_SEQ`) with a `BEFORE INSERT` trigger.
+- **Relational 3NF Views:**
+  - `V_LABORATORY` (Joins laboratory orders with patient and doctor profiles)
+  - `V_MEDICAL_RECORDS` (Joins clinical consultation records with patient demographics)
+  - `V_PATIENT_TRANSFER` (Joins transfers with patient and authorizing physician)
+  - `V_PAYROLLS` (Joins salary records with doctor department data)
+  - `V_PRESCRIPTIONS` (Joins medication orders with patient and doctor details)
+  - `V_SURGERY` (Joins operating room logs with patient and surgeon details)
+  - `V_VITALS` (Joins biometric logs with patient data)
+  - `V_DOCTOR_PATIENTS` (Active doctor-patient relationship rosters)
 
-### Materialized Views and Aggregations
-Pre-aggregated views accelerate dashboard queries:
-- `V_PATIENT_SUMMARY`: Consolidates patient demographics with their latest vitals and active prescription counts.
-- `V_DOCTOR_SCHEDULE`: Aggregates active patient consultations, upcoming surgeries, and pending lab orders for each physician.
-- `V_PHARMACY_STOCK_ALERTS`: Filters medicines with quantities below threshold or approaching expiration within 60 days.
-- `V_PATIENT_TRANSFERS`: Joined view showing source department, destination department, patient name, and transferring physician.
+### Master Schema & Seed Script
+The entire database can be created, indexed, and populated with a single script:
+```sql
+@database/MASTER_SCHEMA_AND_SEED.sql
+```
+This script initializes all 22 tables, 22 sequences, 22 triggers, 8 views, 10 performance indexes, and seeds:
+- 11 Doctors (`DOC-DEMO`, `DOC001`–`DOC010`)
+- 26 Patients (`PAT-DEMO`, `PAT-DEMO-001`–`005`, `PAT001`–`PAT020`)
+- 15 Vendors, 15 Pharma Categories, 15 Pharmaceuticals
+- 15 Financial Accounts, 15 Assets, 15 Equipments
+- Comprehensive clinical records, lab tests, prescriptions, surgeries, and vitals
 
 ---
 
 ## Security and Access Control Architecture
 
-1. **Cryptographic JWT Session Cookies**:
-   - Authentication tokens are generated using `jose` with HS256 encryption.
-   - Tokens are delivered exclusively via HTTP-only, SameSite=Strict, Secure cookies (`session`), preventing client-side JavaScript access and mitigating XSS/CSRF vectors.
+1. **Cryptographic JWT Session Cookies:**
+   - Tokens are signed with HS256 encryption via `jose`.
+   - Delivered exclusively via `HttpOnly`, `SameSite=Lax/Strict`, `Secure` cookies (`session`), preventing client script access and XSS credential exfiltration.
 
-2. **Inactivity Session Invalidation**:
-   - Both client-side activity listeners and server middleware enforce a strict 15-minute inactivity timeout.
-   - Prolonged idle sessions are automatically destroyed and redirected to the login gateway.
+2. **15-Minute Inactivity Auto-Logout:**
+   - Both client-side activity listeners and server-side middleware enforce a strict 15-minute inactivity threshold.
+   - Prolonged idle sessions or machine sleep/suspend events automatically terminate the session.
 
-3. **Parameterized SQL Query Execution**:
-   - All queries executed through `lib/db.js` use strict parameterized bind variables (`:bind_var`), entirely eliminating SQL injection vulnerabilities.
+3. **Parameterized SQL Queries:**
+   - All queries executed through `lib/db.ts` use bind parameters (`:1`, `:2`), eliminating SQL injection vulnerabilities.
 
-4. **Role-Based Route Guards (RBAC)**:
-   - Next.js middleware inspects session claims on every incoming request.
-   - Users attempting to access portals outside their assigned role are redirected to `/unauthorized`.
+4. **Ephemeral Cloud Wallet Architecture:**
+   - Oracle Autonomous Database wallet `.zip` is extracted in-memory to temporary runtime storage (`/tmp/oracle_wallet`) via base64 environment decoding. No sensitive certificate binaries or credentials are committed.
 
-5. **Automated Demo Deletion Protection**:
-   - All destructive database operations (HTTP `DELETE`) are filtered by a security guard.
-   - Requests initiated by demo accounts (`demo.*`) are safely rejected with descriptive alerts, preventing database corruption by public evaluators.
+5. **Automated Demo Deletion Protection:**
+   - Destructive operations (`DELETE`) from demo accounts (`demo.*`) are intercepted with descriptive notices, preserving public demo data integrity.
 
 ---
 
-## API Route Directory
-
-The platform provides 46 API route handlers organized by clinical and operational domain:
+## API Route Directory (46 REST Handlers)
 
 ### Authentication and Session APIs
 - `POST /api/test-auth` - Authenticate user credentials and issue signed JWT session cookie.
@@ -232,25 +237,21 @@ The platform provides 46 API route handlers organized by clinical and operationa
 
 ## Demo Accounts and Deletion Protection Policy
 
-For evaluation and demonstration purposes, pre-configured accounts are available on the login screen (`/login`):
+For instant evaluation, pre-configured accounts are available on the login screen (`/login`):
 
-| Role | Demo Email | Password | Scope |
-| :--- | :--- | :--- | :--- |
-| **Administrator** | `demo.admin@curewell.com` | `demo123` | Full administrative operations, payroll, inventory, assets |
-| **Doctor** | `demo.doctor@curewell.com` | `demo123` | Patient rosters, vitals charting, surgeries, prescriptions |
-| **Patient** | `demo.patient@curewell.com` | `demo123` | Personal health records, lab results, digital prescriptions |
-
-### Demo Protection Guard
-To ensure uninterrupted demonstration quality for all evaluators, all `DELETE` endpoints intercept operations from `demo.*` accounts and return HTTP 403 Forbidden with a user-friendly explanation. Demo users retain full freedom to create and modify records across all three portals.
+| Role | Demo Login | Password | Alternate / Standard Login | Scope |
+| :--- | :--- | :--- | :--- | :--- |
+| **Administrator** | `demo.admin@curewell.com` | `demo123` | `admin@curewell.com` / `admin` | Full hospital operations, payroll, inventory, assets |
+| **Doctor** | `demo.doctor@curewell.com` | `demo123` | `s.jenkins@curewell.com` / `doctor` | Patient rosters, vitals charting, surgeries, prescriptions |
+| **Patient** | `demo.patient@curewell.com` | `demo123` | `john.doe@email.com` / `patient123` | Personal health records, lab results, digital prescriptions |
 
 ---
 
 ## Installation and Environment Configuration
 
 ### Prerequisites
-- Node.js 18.17.0+ or Node.js 20.x
-- Oracle Database 19c (or Oracle XE 21c / Oracle Cloud Autonomous DB)
-- Oracle Instant Client (if thick mode connection is required)
+- Node.js 18.18.0+ or Node.js 20.x
+- Oracle Database 19c (Local XE, Enterprise, or Oracle Cloud Autonomous Database)
 
 ### Step 1: Clone Repository
 ```bash
@@ -264,27 +265,32 @@ npm install
 ```
 
 ### Step 3: Database Schema Initialization
-Execute the SQL scripts in order using Oracle SQL Developer or SQL*Plus:
+Execute the unified master SQL script using Oracle SQL Developer, SQL*Plus, or SQLcl:
 ```sql
-@database/01_SCHEMA_PROJECT_CREATE.sql
-@database/02_SCHEMA_PROJECT_INSERT_PART1.sql
-@database/03_SCHEMA_PROJECT_INSERT_PART2.sql
-@database/04_SEED_DEMO_CLINICAL_DATA.sql
+@database/MASTER_SCHEMA_AND_SEED.sql
 ```
 
 ### Step 4: Configure Environment Variables
 Create a `.env.local` file in the project root:
+
+**For Oracle Cloud Autonomous Database (Wallet-based / Vercel):**
 ```env
-# Oracle Database Credentials
+ORACLE_USER=admin
+ORACLE_PASSWORD=YourOraclePassword
+ORACLE_TNS_NAME=curewellhms_high
+ORACLE_WALLET_PASSWORD=YourWalletPassword
+ORACLE_WALLET_BASE64=base64_encoded_wallet_zip_string
+
+JWT_SECRET=your_long_cryptographically_secure_random_key_here
+```
+
+**For Local Oracle Database:**
+```env
 DB_USER=SCHEMA_PROJECT
-DB_PASSWORD=your_oracle_password
+DB_PASSWORD=your_local_password
 DB_CONNECTION_STRING=localhost:1521/XEPDB1
 
-# JWT Secret for Session Cookie Signing
 JWT_SECRET=your_long_cryptographically_secure_random_key_here
-
-# Optional: Path to Oracle client libraries for thick mode
-# ORACLE_LIB_DIR=C:\oracle\instantclient_19_8
 ```
 
 ### Step 5: Start Development Server
@@ -298,7 +304,7 @@ Navigate to `http://localhost:3000` in your web browser.
 ## Available Scripts
 
 - `npm run dev` - Launches Next.js in development mode with Turbopack fast refresh.
-- `npm run build` - Compiles the application and generates the production build.
+- `npm run build` - Compiles the application and verifies all static and dynamic route builds.
 - `npm run start` - Starts the Next.js production server.
 - `npm run lint` - Executes ESLint checks across the codebase.
 
@@ -346,17 +352,18 @@ Modern-Healthcare-Management-System/
 │   │   ├── surgeries/              # Surgical procedures & recovery care
 │   │   └── vitals/                 # Historical vital signs tracker
 │   ├── layout.tsx                  # Global root layout with theme providers
-│   ├── page.tsx                    # Landing page with 3D Robot & Live Telemetry
+│   ├── page.tsx                    # Refactored home landing page with 3D Robot & GPU Glow
 │   └── unauthorized/               # Access control violation fallback page
 ├── components/
 │   ├── ui/                         # Reusable UI primitives (buttons, dialogs, spline)
-│   │   └── spline.tsx              # Full-bleed 3D Spline scene component
+│   │   └── spline.tsx              # Full-bleed 3D Spline scene component with pointer tracking
 │   └── shared/                     # Cross-portal navigational headers & sidebars
-├── database/                       # Oracle 19c 3NF SQL schema and seed scripts
+├── database/                       # Oracle 19c 3NF unified SQL schema and master seed
+│   └── MASTER_SCHEMA_AND_SEED.sql  # Complete DDL, DML, triggers, views, and seed data
 ├── hooks/                          # Custom React hooks (inactivity timeout, media queries)
 ├── lib/
 │   ├── auth.ts                     # JWT signing, verification, and cookie utilities
-│   ├── db.js                       # Oracle connection pool wrapper with parameterized binds
+│   ├── db.ts                       # Oracle connection pool wrapper with ephemeral wallet support
 │   └── utils.ts                    # Class name mergers and formatting helpers
 ├── middleware.ts                   # Role-based route guard and session validator
 ├── package.json                    # Project dependencies and npm scripts
@@ -367,5 +374,5 @@ Modern-Healthcare-Management-System/
 
 ## Author and Maintainer
 
-- **Nobody243** (`01-135232-062@student.bahria.ed.pk`)
+- **Nobody243** (`01-135232-062@student.bahria.edu.pk`)
 - GitHub Repository: [Nobody243/Modern-Healthcare-Management-System](https://github.com/Nobody243/Modern-Healthcare-Management-System)
