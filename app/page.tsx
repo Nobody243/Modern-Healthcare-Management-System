@@ -24,9 +24,7 @@ import {
   Crosshair,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SplineScene } from '@/components/ui/spline';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { BorderBeam } from '@/components/ui/border-beam';
 
 // ============================================================================
 // ZERO-RERENDER DYNAMIC CURSOR GLOW (DESKTOP / FINE-POINTER ONLY)
@@ -851,9 +849,8 @@ export default function HomePage() {
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.4, delay: 0.05 }}
             >
-              <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl relative overflow-hidden">
-                <BorderBeam size={160} duration={8} colorFrom="#1AA8BB" colorTo="#2DD4BF" />
-                <div className="space-y-2 relative z-10">
+              <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
+                <div className="space-y-2">
                   <div className="p-2.5 w-fit rounded-xl kpi-icon-info shadow-xs">
                     <Database className="w-4 h-4" />
                   </div>
@@ -862,7 +859,7 @@ export default function HomePage() {
                     Unified 3NF relational schema with foreign key constraints, sequence generators, and ACID rollback safeguards.
                   </p>
                 </div>
-                <div className="pt-2.5 border-t border-border text-[11px] font-mono text-kpi-info font-bold relative z-10">
+                <div className="pt-2.5 border-t border-border text-[11px] font-mono text-kpi-info font-bold">
                   • 22 Relational DB Tables
                 </div>
               </SpotlightCard>
