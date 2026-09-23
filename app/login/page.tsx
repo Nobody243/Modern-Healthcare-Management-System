@@ -1,5 +1,5 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -141,6 +141,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  // Clear any old cross-tab logout signals on login page load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('hms_logout_broadcast');
+      } catch {}
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -153,6 +162,13 @@ export default function LoginPage() {
       setError(result.error);
       setLoading(false);
     } else if (result?.success && result?.redirectUrl) {
+      // Prime fresh session timestamp and clear old signals
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('hms_logout_broadcast');
+          localStorage.setItem('hms_last_activity_time', Date.now().toString());
+        } catch {}
+      }
       router.push(result.redirectUrl);
       router.refresh();
     }

@@ -50,10 +50,11 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
   // Is this route a public unauthenticated route?
   const isPublicRoute =
+    !pathname ||
     pathname === '/login' ||
     pathname === '/' ||
     pathname === '/unauthorized' ||
-    pathname?.startsWith('/api');
+    pathname.startsWith('/api');
 
   // Trigger logout across all tabs and redirect
   const performLogout = useCallback(
@@ -112,7 +113,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
         const stored = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
         if (stored) {
           const parsed = parseInt(stored, 10);
-          if (!isNaN(parsed) && parsed > recordedActivity) {
+          if (!isNaN(parsed) && parsed > recordedActivity && parsed <= now) {
             recordedActivity = parsed;
             lastActivityRef.current = parsed;
           }
@@ -149,20 +150,24 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
       return;
     }
 
-    // Initialize or read last activity
+    // Initialize or validate last activity for this protected session
     const now = Date.now();
+    lastActivityRef.current = now;
+    lastTickTimeRef.current = now;
+
     if (typeof window !== 'undefined') {
       try {
+        // Clear any stale broadcast signals from past sessions
+        localStorage.removeItem(STORAGE_KEY_LOGOUT_SIGNAL);
+
         const stored = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
         if (stored) {
           const parsed = parseInt(stored, 10);
-          if (!isNaN(parsed) && now - parsed < INACTIVITY_TIMEOUT_MS) {
+          // If stored activity timestamp is within active window, sync to it
+          if (!isNaN(parsed) && parsed <= now && now - parsed < INACTIVITY_TIMEOUT_MS) {
             lastActivityRef.current = parsed;
-          } else if (now - parsed >= INACTIVITY_TIMEOUT_MS) {
-            // Already expired from previous tab/session
-            performLogout('inactivity');
-            return;
           } else {
+            // Fresh visit / new login -> reset timestamp to now
             localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, now.toString());
             lastActivityRef.current = now;
           }
@@ -174,8 +179,6 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
         lastActivityRef.current = now;
       }
     }
-
-    lastTickTimeRef.current = Date.now();
 
     // User interaction handler (throttled)
     const handleUserActivity = () => {
@@ -199,6 +202,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     // When PC sleeps or tab freezes, timer ticks pause.
     // When PC wakes up, tick delta or visibility change detects large time jump.
     const handleWakeOrFocus = () => {
+      if (isPublicRoute || isLoggingOut) return;
       const currentTime = Date.now();
       let recordedActivity = lastActivityRef.current;
 
@@ -206,8 +210,8 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
         const stored = localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY);
         if (stored) {
           const parsed = parseInt(stored, 10);
-          if (!isNaN(parsed)) {
-            recordedActivity = parsed;
+          if (!isNaN(parsed) && parsed <= currentTime) {
+            recordedActivity = Math.max(recordedActivity, parsed);
           }
         }
       } catch {}
@@ -228,15 +232,17 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
         // Another tab triggered logout
         try {
           const payload = JSON.parse(event.newValue);
-          window.location.href = `/login?reason=${encodeURIComponent(payload.reason || 'inactivity')}`;
+          if (payload?.time && Date.now() - payload.time < 15000) {
+            window.location.href = `/login?reason=${encodeURIComponent(payload.reason || 'inactivity')}`;
+          }
         } catch {
           window.location.href = '/login?reason=inactivity';
         }
       } else if (event.key === STORAGE_KEY_LAST_ACTIVITY && event.newValue) {
         // Another tab recorded activity -> update this tab's state
         const parsed = parseInt(event.newValue, 10);
-        if (!isNaN(parsed)) {
-          lastActivityRef.current = parsed;
+        if (!isNaN(parsed) && parsed <= Date.now()) {
+          lastActivityRef.current = Math.max(lastActivityRef.current, parsed);
           if (Date.now() - parsed < INACTIVITY_TIMEOUT_MS - WARNING_WINDOW_MS) {
             setShowWarning(false);
           }
