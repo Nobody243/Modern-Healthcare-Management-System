@@ -42,10 +42,17 @@ function CursorGlow() {
   const smoothY = useSpring(cursorY, springConfig);
 
   useEffect(() => {
-    // Only activate cursor tracking on fine-pointer (mouse) desktop devices
-    const isFine = window.matchMedia('(pointer: fine) and (min-width: 768px)').matches;
-    setIsFinePointer(isFine);
-    if (!isFine) return;
+    // Strictly verify fine pointer (mouse) and hover support (desktop only)
+    const media = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
+    setIsFinePointer(media.matches);
+
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      setIsFinePointer(e.matches);
+    };
+
+    media.addEventListener('change', handleMediaChange);
+
+    if (!media.matches) return () => media.removeEventListener('change', handleMediaChange);
 
     const handleMouseMove = (e: MouseEvent) => {
       cursorX.set(e.clientX);
@@ -61,6 +68,7 @@ function CursorGlow() {
     document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
+      media.removeEventListener('change', handleMediaChange);
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
@@ -69,7 +77,7 @@ function CursorGlow() {
   if (!isFinePointer) return null;
 
   return (
-    <div className="hidden md:block pointer-events-none">
+    <div className="hidden lg:block pointer-events-none select-none">
       {/* Primary Luminous Ambient Beam Follower */}
       <motion.div
         style={{
@@ -79,9 +87,9 @@ function CursorGlow() {
           translateY: '-50%',
           opacity,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.18) 0%, rgba(59, 130, 246, 0.05) 45%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, rgba(59, 130, 246, 0.04) 45%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 z-30 w-[420px] h-[420px] rounded-full blur-2xl transform-gpu will-change-transform"
+        className="fixed top-0 left-0 z-30 w-[400px] h-[400px] rounded-full blur-2xl transform-gpu will-change-transform"
       />
       {/* Magnetic Core Micro Beacon */}
       <motion.div
@@ -92,16 +100,16 @@ function CursorGlow() {
           translateY: '-50%',
           opacity,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.35) 0%, rgba(34, 211, 238, 0.08) 40%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.32) 0%, rgba(34, 211, 238, 0.06) 40%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 z-30 w-[140px] h-[140px] rounded-full blur-lg transform-gpu will-change-transform"
+        className="fixed top-0 left-0 z-30 w-[120px] h-[120px] rounded-full blur-lg transform-gpu will-change-transform"
       />
     </div>
   );
 }
 
 // ============================================================================
-// HIGH-VISIBILITY SPOTLIGHT CARD
+// HIGH-VISIBILITY RESPONSIVE CARD
 // ============================================================================
 function SpotlightCard({
   children,
@@ -111,28 +119,36 @@ function SpotlightCard({
   className?: string;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [canHover, setCanHover] = useState(false);
+
+  useEffect(() => {
+    // Only enable mouse hover listener on desktop devices with hover support
+    setCanHover(window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !canHover) return;
     const rect = cardRef.current.getBoundingClientRect();
     cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
     cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-  }, []);
+  }, [canHover]);
 
   return (
     <div
       ref={cardRef}
-      onMouseMove={handleMouseMove}
-      className={`group relative overflow-hidden rounded-2xl bg-card border border-border/90 dark:border-slate-700/80 shadow-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transform-gpu will-change-transform ${className}`}
+      onMouseMove={canHover ? handleMouseMove : undefined}
+      className={`group relative overflow-hidden rounded-2xl bg-card border border-border/90 dark:border-slate-700/90 shadow-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl lg:hover:-translate-y-1 transform-gpu will-change-transform ${className}`}
     >
-      {/* Keylight Spotlight Beam */}
-      <div
-        className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform-gpu"
-        style={{
-          background:
-            'radial-gradient(350px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.15), transparent 70%)',
-        }}
-      />
+      {/* Spotlight Beam (Desktop Only - completely disabled on mobile/tablet to avoid click blobs) */}
+      {canHover && (
+        <div
+          className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform-gpu hidden lg:block"
+          style={{
+            background:
+              'radial-gradient(320px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.14), transparent 70%)',
+          }}
+        />
+      )}
       {/* Top Accent Rim */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       <div className="relative z-10">{children}</div>
@@ -210,7 +226,7 @@ export default function HomePage() {
   const portalDetails = {
     doctor: {
       title: 'Physician & Surgeon Portal',
-      subtitle: 'Longitudinal EHR charting, vital telemetry & surgery schedules',
+      subtitle: 'Longitudinal EHR charting, vital telemetry & surgical schedules',
       badge: 'Physician Workflows',
       accentBg: 'badge-theme-success',
       iconClass: 'kpi-icon-success',
@@ -275,12 +291,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground relative overflow-x-hidden">
-      {/* Desktop Cursor Glow (Auto-hidden on Mobile / Touch) */}
+      {/* Desktop Cursor Glow (Auto-hidden on Mobile / Tablet) */}
       <CursorGlow />
 
       {/* Top Scroll Progress Indicator */}
       <motion.div
-        className="fixed top-0 left-0 right-0 h-[2.5px] card-accent-bar z-50 origin-left pointer-events-none transform-gpu will-change-transform shadow-md"
+        className="fixed top-0 left-0 right-0 h-[2.5px] card-accent-bar z-50 origin-left pointer-events-none transform-gpu will-change-transform shadow-sm"
         style={{ scaleX: scrollYProgress, transformOrigin: '0%' }}
       />
 
@@ -298,19 +314,19 @@ export default function HomePage() {
       </div>
 
       {/* FIXED PERSISTENT TOP NAVBAR */}
-      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-background/90 border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-40 backdrop-blur-md bg-background/90 border-b border-border shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-15 sm:h-16 flex items-center justify-between">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl card-accent-bar flex items-center justify-center shadow-md group-hover:scale-105 transition-transform text-white">
-              <Activity className="w-5 h-5 font-extrabold stroke-[2.5]" />
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl card-accent-bar flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform text-white shrink-0">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 font-extrabold stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-base sm:text-lg tracking-tight text-heading">
                   CureWell
                 </span>
-                <span className="badge badge-theme-primary text-[10px] uppercase font-bold tracking-widest px-1.5 py-0.5">
+                <span className="badge badge-theme-primary text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5">
                   HMS
                 </span>
               </div>
@@ -318,8 +334,8 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links with Active Pill */}
-          <nav className="hidden lg:flex items-center gap-1 bg-card/95 p-1 rounded-full border border-border shadow-sm text-xs font-bold text-muted-foreground">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 bg-card/95 p-1 rounded-full border border-border shadow-xs text-xs font-bold text-muted-foreground">
             {[
               { id: 'hero', label: 'Overview' },
               { id: 'portals', label: 'Portals' },
@@ -339,7 +355,7 @@ export default function HomePage() {
                   {isActive && (
                     <motion.div
                       layoutId="activeNavIndicator"
-                      className="absolute inset-0 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full shadow-md shadow-cyan-500/20"
+                      className="absolute inset-0 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full shadow-xs"
                       transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                     />
                   )}
@@ -350,8 +366,8 @@ export default function HomePage() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold">
                 ORACLE 19c <span className="text-emerald-600 dark:text-emerald-400">ONLINE</span>
@@ -361,7 +377,7 @@ export default function HomePage() {
             <ThemeToggle />
 
             <Link href="/login" className="hidden sm:inline-block">
-              <Button className="btn-primary h-9 px-4 text-xs flex items-center gap-1.5 shadow-sm rounded-xl">
+              <Button className="btn-primary h-8 sm:h-9 px-3.5 sm:px-4 text-xs flex items-center gap-1.5 shadow-xs rounded-xl">
                 <span>Sign In</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
@@ -387,7 +403,7 @@ export default function HomePage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden fixed inset-0 top-16 bg-black/70 backdrop-blur-sm z-30"
+                className="lg:hidden fixed inset-0 top-15 sm:top-16 bg-black/70 backdrop-blur-xs z-30"
               />
 
               <motion.div
@@ -436,25 +452,25 @@ export default function HomePage() {
       </header>
 
       {/* Main Content Stage */}
-      <main className="relative z-10 pt-16">
+      <main className="relative z-10 pt-15 sm:pt-16">
         {/* ========================================================================= */}
         {/* SCENE 01: HERO SECTION                                                   */}
         {/* ========================================================================= */}
         <section
           id="hero"
-          className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-8 lg:py-4 scroll-mt-20"
+          className="min-h-[auto] lg:min-h-[calc(100vh-4.5rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-8 sm:py-12 lg:py-4 scroll-mt-20"
         >
-          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
             {/* LEFT SIDE (50%): HEADLINE & ACTIONS */}
-            <div className="lg:col-span-6 space-y-5 text-left">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left">
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card border border-primary/40 shadow-sm text-xs font-semibold text-primary"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-primary/40 shadow-xs text-xs font-semibold text-primary"
               >
                 <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                <span className="font-mono text-[11px] uppercase tracking-wider">
+                <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-wider">
                   ENTERPRISE HEALTHCARE PLATFORM
                 </span>
               </motion.div>
@@ -478,7 +494,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.16 }}
-                className="text-sm sm:text-base text-muted-foreground max-w-lg leading-relaxed"
+                className="text-xs sm:text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed"
               >
                 An integrated clinical workspace connecting physicians, patients, and hospital administrators
                 with Oracle 19c database operations and HIPAA session security.
@@ -489,10 +505,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.24 }}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 pt-1"
               >
                 <Link href="/login" className="w-full sm:w-auto">
-                  <Button className="btn-primary h-11 px-6 text-sm rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto shadow-md">
+                  <Button className="btn-primary h-10 sm:h-11 px-6 text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm">
                     <Sparkles className="w-4 h-4" />
                     <span>Launch Live Demo</span>
                     <ArrowRight className="w-4 h-4" />
@@ -505,7 +521,7 @@ export default function HomePage() {
                 >
                   <Button
                     variant="outline"
-                    className="btn-secondary h-11 px-5 text-sm rounded-xl w-full sm:w-auto justify-center"
+                    className="btn-secondary h-10 sm:h-11 px-5 text-xs sm:text-sm rounded-xl w-full sm:w-auto justify-center"
                   >
                     Explore Portals ↓
                   </Button>
@@ -519,21 +535,21 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.32 }}
                 className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-muted-foreground font-semibold"
               >
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-sm">
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-kpi-success shrink-0" />
-                  <span className="truncate">Oracle 19c ACID</span>
+                  <span className="truncate text-[11px] sm:text-xs">Oracle 19c ACID</span>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-sm">
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-kpi-success shrink-0" />
-                  <span className="truncate">HIPAA Privacy</span>
+                  <span className="truncate text-[11px] sm:text-xs">HIPAA Privacy</span>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-sm">
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-kpi-success shrink-0" />
-                  <span className="truncate">15-Min Timeout</span>
+                  <span className="truncate text-[11px] sm:text-xs">15-Min Timeout</span>
                 </div>
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-sm">
+                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-card border border-border shadow-xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-kpi-success shrink-0" />
-                  <span className="truncate">HttpOnly JWT</span>
+                  <span className="truncate text-[11px] sm:text-xs">HttpOnly JWT</span>
                 </div>
               </motion.div>
             </div>
@@ -543,16 +559,16 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
-              className="hidden lg:flex lg:col-span-6 relative w-full h-[540px] items-center justify-center overflow-visible select-none isolate transform-gpu"
+              className="hidden lg:flex lg:col-span-6 relative w-full h-[520px] items-center justify-center overflow-visible select-none isolate transform-gpu"
             >
               <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none" />
 
-              <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border font-mono text-[10px] text-primary backdrop-blur-sm shadow-md">
+              <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border font-mono text-[10px] text-primary backdrop-blur-xs shadow-xs">
                 <Crosshair className="w-3.5 h-3.5 text-primary animate-spin" />
-                <span>AI_DIAGNOSTIC_ASSIST: ACTIVE</span>
+                <span>AI_DIAGNOSTIC: ACTIVE</span>
               </div>
 
-              <div className="absolute bottom-4 right-4 z-20 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border font-mono text-[10px] text-kpi-success backdrop-blur-sm shadow-md">
+              <div className="absolute bottom-4 right-4 z-20 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border font-mono text-[10px] text-kpi-success backdrop-blur-xs shadow-xs">
                 <Activity className="w-3.5 h-3.5 text-kpi-success animate-pulse" />
                 <span>SYSTEM: OPERATIONAL</span>
               </div>
@@ -570,27 +586,27 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="block lg:hidden w-full"
             >
-              <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border/90 shadow-lg space-y-3.5 relative overflow-hidden">
+              <div className="p-4 rounded-2xl bg-card border border-border/90 shadow-md space-y-3 relative overflow-hidden">
                 <div className="card-accent-bar absolute top-0 left-0 right-0" />
                 
-                <div className="flex items-center justify-between pb-2.5 border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg kpi-icon-success shadow-sm">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-1.5 rounded-lg kpi-icon-success shadow-xs shrink-0">
                       <HeartPulse className="w-4 h-4 animate-pulse" />
                     </div>
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-bold text-heading">Clinical Telemetry Engine</h3>
-                      <p className="text-[10px] text-muted-foreground font-mono">Live Biometric Stream • Oracle 19c</p>
+                    <div className="min-w-0">
+                      <h3 className="text-xs sm:text-sm font-bold text-heading truncate">Clinical Telemetry Engine</h3>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">Live Biometric Stream • Oracle 19c</p>
                     </div>
                   </div>
-                  <span className="badge badge-theme-success text-[9px] uppercase font-bold tracking-wider px-2 py-0.5">
+                  <span className="badge badge-theme-success text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 shrink-0">
                     Online
                   </span>
                 </div>
 
                 {/* Mobile Vital Metrics Grid */}
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="p-2.5 rounded-xl bg-background border border-border">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-background border border-border">
                     <span className="text-[9px] text-muted-foreground font-mono block">HEART RATE</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
                       <span className="text-base font-bold text-kpi-success font-mono">72</span>
@@ -598,7 +614,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-background border border-border">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-background border border-border">
                     <span className="text-[9px] text-muted-foreground font-mono block">OXYGEN</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
                       <span className="text-base font-bold text-primary font-mono">98%</span>
@@ -606,7 +622,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-background border border-border">
+                  <div className="p-2 sm:p-2.5 rounded-xl bg-background border border-border">
                     <span className="text-[9px] text-muted-foreground font-mono block">SURGERY</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
                       <span className="text-base font-bold text-kpi-warning font-mono">1 Active</span>
@@ -623,7 +639,7 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section
           id="portals"
-          className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
+          className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -649,9 +665,9 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4 }}
-            className="flex justify-center mb-6 px-2"
+            className="flex justify-center mb-5 sm:mb-6 px-1"
           >
-            <div className="p-1 bg-card border border-border rounded-2xl flex gap-1 shadow-md">
+            <div className="p-1 bg-card border border-border rounded-2xl flex gap-1 shadow-xs max-w-full overflow-x-auto">
               {(['doctor', 'patient', 'admin'] as const).map((tab) => {
                 const Icon = portalDetails[tab].icon;
                 const isActive = activePortalTab === tab;
@@ -659,7 +675,7 @@ export default function HomePage() {
                   <button
                     key={tab}
                     onClick={() => setActivePortalTab(tab)}
-                    className={`relative flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                    className={`relative flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
                       isActive
                         ? 'text-white font-extrabold'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -668,7 +684,7 @@ export default function HomePage() {
                     {isActive && (
                       <motion.div
                         layoutId="activePortalTabPill"
-                        className="absolute inset-0 btn-primary rounded-xl shadow-sm"
+                        className="absolute inset-0 btn-primary rounded-xl shadow-xs"
                         transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                       />
                     )}
@@ -692,36 +708,39 @@ export default function HomePage() {
               transition={{ duration: 0.2 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="p-5 sm:p-7 rounded-2xl bg-card border border-border/90 dark:border-slate-700/80 shadow-xl space-y-5 relative overflow-hidden">
+              <div className="p-4 sm:p-6 lg:p-7 rounded-2xl bg-card border border-border/90 dark:border-slate-700/90 shadow-lg space-y-4 sm:space-y-5 relative overflow-hidden">
                 <div className="card-accent-bar absolute top-0 left-0 right-0" />
 
+                {/* Portal Card Header (Fluid wrap, no truncation) */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 pb-4 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 sm:p-3 rounded-xl ${currentPortal.iconClass} shrink-0 shadow-md`}>
-                      <PortalIcon className="w-6 h-6" />
+                  <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto min-w-0">
+                    <div className={`p-2.5 sm:p-3 rounded-xl ${currentPortal.iconClass} shrink-0 shadow-xs mt-0.5 sm:mt-0`}>
+                      <PortalIcon className="w-5 h-5 sm:w-6 h-6" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`badge ${currentPortal.accentBg} text-[10px] font-bold uppercase tracking-wider px-2 py-0.5`}>
-                          {currentPortal.badge}
-                        </span>
-                      </div>
-                      <h3 className="text-base sm:text-xl font-bold text-heading mt-0.5">{currentPortal.title}</h3>
-                      <p className="text-xs text-muted-foreground">{currentPortal.subtitle}</p>
+                    <div className="min-w-0 flex-1">
+                      <span className={`badge ${currentPortal.accentBg} text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 inline-block mb-1`}>
+                        {currentPortal.badge}
+                      </span>
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-heading leading-snug break-words">
+                        {currentPortal.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-normal">
+                        {currentPortal.subtitle}
+                      </p>
                     </div>
                   </div>
 
-                  <Link href="/login" className="w-full sm:w-auto shrink-0">
-                    <Button className="btn-primary h-9 px-4 text-xs rounded-xl flex items-center justify-center gap-1.5 w-full sm:w-auto shadow-sm">
+                  <Link href="/login" className="w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
+                    <Button className="btn-primary h-9 px-4 text-xs rounded-xl flex items-center justify-center gap-1.5 w-full sm:w-auto shadow-xs">
                       <span>Launch Demo</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Button>
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   {/* Capabilities List */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
                       Core Capabilities
                     </h4>
@@ -736,7 +755,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Portal Telemetry Snapshot */}
-                  <div className="p-3.5 sm:p-4 rounded-xl bg-background border border-border space-y-3.5 flex flex-col justify-between">
+                  <div className="p-3 sm:p-4 rounded-xl bg-background border border-border space-y-3 flex flex-col justify-between">
                     <div>
                       <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-muted-foreground mb-2">
                         Portal Metrics
@@ -754,7 +773,7 @@ export default function HomePage() {
                     </div>
 
                     {/* Pre-configured Demo Account */}
-                    <div className="p-2.5 rounded-lg bg-card border border-border flex items-center justify-between gap-2 text-xs">
+                    <div className="p-2 rounded-lg bg-card border border-border flex items-center justify-between gap-2 text-xs">
                       <div className="min-w-0">
                         <p className="text-[9px] text-muted-foreground uppercase font-mono">
                           Demo Account
@@ -792,14 +811,14 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section
           id="architecture"
-          className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
+          className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.5 }}
-            className="text-center space-y-2 mb-8 sm:mb-10"
+            className="text-center space-y-2 mb-6 sm:mb-8"
           >
             <span className="badge badge-theme-primary text-xs font-mono font-bold uppercase tracking-wider px-3 py-1">
               SYSTEM ARCHITECTURE
@@ -812,7 +831,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
             {/* Bento Card 1: Oracle Database */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -822,8 +841,8 @@ export default function HomePage() {
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl relative overflow-hidden">
                 <BorderBeam size={160} duration={8} colorFrom="#1AA8BB" colorTo="#2DD4BF" />
-                <div className="space-y-2.5 relative z-10">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-info shadow-sm">
+                <div className="space-y-2 relative z-10">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-info shadow-xs">
                     <Database className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">Oracle 19c Relational Core</h3>
@@ -845,8 +864,8 @@ export default function HomePage() {
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-danger shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-danger shadow-xs">
                     <HeartPulse className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">Clinical EHR & Vitals</h3>
@@ -868,8 +887,8 @@ export default function HomePage() {
               transition={{ duration: 0.4, delay: 0.15 }}
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-success shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-success shadow-xs">
                     <Pill className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">Pharmacy & Inventory</h3>
@@ -891,8 +910,8 @@ export default function HomePage() {
               transition={{ duration: 0.4, delay: 0.2 }}
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-primary shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-primary shadow-xs">
                     <Building2 className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">Operations & Payroll</h3>
@@ -913,14 +932,14 @@ export default function HomePage() {
         {/* ========================================================================= */}
         <section
           id="security"
-          className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
+          className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border scroll-mt-20"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.5 }}
-            className="text-center space-y-2 mb-8 sm:mb-10"
+            className="text-center space-y-2 mb-6 sm:mb-8"
           >
             <span className="badge badge-theme-primary text-xs font-mono font-bold uppercase tracking-wider px-3 py-1">
               SECURITY & GOVERNANCE
@@ -933,7 +952,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -941,8 +960,8 @@ export default function HomePage() {
               transition={{ duration: 0.4, delay: 0.05 }}
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-warning shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-warning shadow-xs">
                     <Clock className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">15-Minute Auto-Logout</h3>
@@ -963,8 +982,8 @@ export default function HomePage() {
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-success shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-success shadow-xs">
                     <Key className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">HttpOnly Session Cookies</h3>
@@ -986,8 +1005,8 @@ export default function HomePage() {
               className="sm:col-span-2 lg:col-span-1"
             >
               <SpotlightCard className="p-4 sm:p-5 space-y-3 h-full flex flex-col justify-between rounded-2xl">
-                <div className="space-y-2.5">
-                  <div className="p-2.5 w-fit rounded-xl kpi-icon-info shadow-sm">
+                <div className="space-y-2">
+                  <div className="p-2.5 w-fit rounded-xl kpi-icon-info shadow-xs">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <h3 className="text-base font-bold text-heading">Role-Based Access (RBAC)</h3>
@@ -1011,16 +1030,16 @@ export default function HomePage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
           transition={{ duration: 0.5 }}
-          className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border"
+          className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border"
         >
-          <div className="p-5 sm:p-8 rounded-2xl bg-card border border-border/90 shadow-xl flex flex-col md:flex-row items-center justify-between gap-5 relative overflow-hidden">
+          <div className="p-5 sm:p-7 rounded-2xl bg-card border border-border/90 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-5 relative overflow-hidden">
             <div className="card-accent-bar absolute top-0 left-0 right-0" />
 
-            <div className="space-y-1.5 text-center md:text-left">
+            <div className="space-y-1 text-center md:text-left">
               <span className="text-[10px] font-mono text-primary uppercase tracking-widest font-bold">
                 SYSTEM ACCESS
               </span>
-              <h3 className="text-xl sm:text-2xl font-bold text-heading">
+              <h3 className="text-lg sm:text-2xl font-bold text-heading">
                 Ready to Experience CureWell HMS?
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-lg">
@@ -1030,7 +1049,7 @@ export default function HomePage() {
 
             <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
               <Link href="/login" className="w-full sm:w-auto">
-                <Button className="btn-primary h-11 px-7 text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto shadow-md">
+                <Button className="btn-primary h-10 sm:h-11 px-6 text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto shadow-xs">
                   <span>Sign In to System</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -1041,7 +1060,7 @@ export default function HomePage() {
       </main>
 
       {/* Modern Technical Footer */}
-      <footer className="border-t border-border bg-card/40 py-8 px-4 sm:px-6 lg:px-8">
+      <footer className="border-t border-border bg-card/40 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-primary" />
