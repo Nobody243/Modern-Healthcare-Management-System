@@ -55,6 +55,7 @@ next-env.d.ts
 # scratch scripts
 scratch/
 temp/
+*temp*
 rebuild*
 
 # Oracle Wallet & Credentials
