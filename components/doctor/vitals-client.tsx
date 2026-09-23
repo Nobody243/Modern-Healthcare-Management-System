@@ -282,125 +282,137 @@ export default function DoctorVitalsClient() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.04 }}
+                    className="h-full"
                   >
-                    <Card className="card overflow-hidden border border-border shadow-md hover:shadow-xl transition-all bg-card">
+                    <Card className="card overflow-hidden border border-border shadow-md hover:shadow-xl transition-all bg-card flex flex-col justify-between h-full">
                       <div className="card-accent-bar" />
-                      <CardHeader className="flex flex-row items-start justify-between pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
-                            <HeartPulse className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <CardTitle className="text-lg font-bold text-heading tracking-tight">
-                                {patientName}
-                              </CardTitle>
-                              <span className={`badge-subaction font-bold text-[10px] py-0.5 px-2 ${bpEval.badgeClass}`}>
-                                <span className="inline-block w-1.5 h-1.5 rounded-full mr-1" style={{ backgroundColor: bpEval.dotColor }} />
-                                {bpEval.label}
-                              </span>
+                      <div>
+                        <CardHeader className="flex flex-row items-start justify-between pb-3 gap-2">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                              <HeartPulse className="w-5 h-5" />
                             </div>
-                            <p className="text-xs text-muted font-semibold mt-0.5 flex items-center gap-1.5">
-                              <span className="table-id-link font-bold">{vital.VIT_PAT_NUMBER}</span>
-                              <span className="text-muted-foreground">•</span>
-                              <span className="text-muted font-medium">{formatDate(vital.VIT_RECORDED_DATE)}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(vital)}
-                            className="table-action-edit hover-lift cursor-pointer h-8 w-8"
-                            title="Edit Vitals"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete(vital)}
-                            disabled={safeDelete.isDeleting}
-                            className="table-action-delete hover-lift cursor-pointer h-8 w-8"
-                            title="Delete Vitals"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                          {/* Blood Pressure */}
-                          <div className="vital-tile vital-tile-bp">
-                            <div className="vital-label flex items-center justify-between">
-                              <span>Blood Pressure</span>
-                              <Activity className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                            </div>
-                            <div className="mt-1.5 flex items-baseline gap-1">
-                              <span className="vital-value">{vital.VIT_BLOOD_PRESSURE || '120/80'}</span>
-                              <span className="vital-unit">mmHg</span>
-                            </div>
-                            {mapVal && (
-                              <div className="text-[11px] font-mono text-cyan-700 dark:text-cyan-300 font-semibold mt-1">
-                                MAP: {mapVal} mmHg
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                <CardTitle className="text-base sm:text-lg font-bold text-heading tracking-tight truncate max-w-full">
+                                  {patientName}
+                                </CardTitle>
+                                <span className={`badge-subaction font-bold text-[10px] py-0.5 px-2 shrink-0 ${bpEval.badgeClass}`}>
+                                  <span className="inline-block w-1.5 h-1.5 rounded-full mr-1" style={{ backgroundColor: bpEval.dotColor }} />
+                                  {bpEval.label}
+                                </span>
                               </div>
-                            )}
+                              <p className="text-xs text-muted font-semibold mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                <span className="table-id-link font-bold whitespace-nowrap font-mono">{vital.VIT_PAT_NUMBER}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="text-muted font-medium whitespace-nowrap">{formatDate(vital.VIT_RECORDED_DATE)}</span>
+                              </p>
+                            </div>
                           </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(vital)}
+                              className="table-action-edit hover-lift cursor-pointer h-8 w-8"
+                              title="Edit Vitals"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDelete(vital)}
+                              disabled={safeDelete.isDeleting}
+                              className="table-action-delete hover-lift cursor-pointer h-8 w-8"
+                              title="Delete Vitals"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {/* Blood Pressure */}
+                            <div className="vital-tile vital-tile-bp flex flex-col justify-between min-h-[90px]">
+                              <div>
+                                <div className="vital-label flex items-center justify-between">
+                                  <span>Blood Pressure</span>
+                                  <Activity className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                                </div>
+                                <div className="mt-1.5 flex items-baseline gap-1">
+                                  <span className="vital-value">{vital.VIT_BLOOD_PRESSURE || '120/80'}</span>
+                                  <span className="vital-unit">mmHg</span>
+                                </div>
+                              </div>
+                              <div className="text-[11px] font-mono text-cyan-700 dark:text-cyan-300 font-semibold mt-1">
+                                {mapVal ? `MAP: ${mapVal} mmHg` : 'Normotensive'}
+                              </div>
+                            </div>
 
-                          {/* Heart Rate */}
-                          <div className="vital-tile vital-tile-pulse">
-                            <div className="vital-label flex items-center justify-between">
-                              <span>Heart Rate</span>
-                              <HeartPulse className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                            {/* Heart Rate */}
+                            <div className="vital-tile vital-tile-pulse flex flex-col justify-between min-h-[90px]">
+                              <div>
+                                <div className="vital-label flex items-center justify-between">
+                                  <span>Heart Rate</span>
+                                  <HeartPulse className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                                </div>
+                                <div className="mt-1.5 flex items-baseline gap-1">
+                                  <span className="vital-value">{vital.VIT_HEARTPULSE || 72}</span>
+                                  <span className="vital-unit">bpm</span>
+                                </div>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
+                                {pulseEval.label}
+                              </div>
                             </div>
-                            <div className="mt-1.5 flex items-baseline gap-1">
-                              <span className="vital-value">{vital.VIT_HEARTPULSE || 72}</span>
-                              <span className="vital-unit">bpm</span>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
-                              {pulseEval.label}
-                            </div>
-                          </div>
 
-                          {/* Temperature */}
-                          <div className="vital-tile vital-tile-temp">
-                            <div className="vital-label flex items-center justify-between">
-                              <span>Body Temp</span>
-                              <Thermometer className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                            {/* Temperature */}
+                            <div className="vital-tile vital-tile-temp flex flex-col justify-between min-h-[90px]">
+                              <div>
+                                <div className="vital-label flex items-center justify-between">
+                                  <span>Body Temp</span>
+                                  <Thermometer className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                </div>
+                                <div className="mt-1.5 flex items-baseline gap-1">
+                                  <span className="vital-value">{vital.VIT_BODYTEMP || 98.6}</span>
+                                  <span className="vital-unit">°F</span>
+                                </div>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
+                                {tempEval.label}
+                              </div>
                             </div>
-                            <div className="mt-1.5 flex items-baseline gap-1">
-                              <span className="vital-value">{vital.VIT_BODYTEMP || 98.6}</span>
-                              <span className="vital-unit">°F</span>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
-                              {tempEval.label}
-                            </div>
-                          </div>
 
-                          {/* Oxygen Saturation */}
-                          <div className="vital-tile vital-tile-spo2">
-                            <div className="vital-label flex items-center justify-between">
-                              <span>SpO2</span>
-                              <Wind className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                            </div>
-                            <div className="mt-1.5 flex items-baseline gap-1">
-                              <span className="vital-value">{vital.VIT_OXYGEN_SAT || 98}</span>
-                              <span className="vital-unit">%</span>
-                            </div>
-                            <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
-                              {spo2Eval.label}
+                            {/* Oxygen Saturation */}
+                            <div className="vital-tile vital-tile-spo2 flex flex-col justify-between min-h-[90px]">
+                              <div>
+                                <div className="vital-label flex items-center justify-between">
+                                  <span>SpO2</span>
+                                  <Wind className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                                </div>
+                                <div className="mt-1.5 flex items-baseline gap-1">
+                                  <span className="vital-value">{vital.VIT_OXYGEN_SAT || 98}</span>
+                                  <span className="vital-unit">%</span>
+                                </div>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground font-semibold mt-1 truncate">
+                                {spo2Eval.label}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </CardContent>
+                      </div>
 
-                        {vital.VIT_RECORDED_BY && (
-                          <div className="mt-3.5 flex items-center justify-between text-xs text-muted pt-2.5 border-t border-border font-medium">
-                            <span>Recorded by: <span className="font-bold text-heading">{vital.VIT_RECORDED_BY}</span></span>
-                            {vital.VIT_WEIGHT && <span>Weight: <span className="font-mono font-bold text-heading">{vital.VIT_WEIGHT} lbs</span></span>}
-                          </div>
+                      {/* Standardized Card Footer */}
+                      <div className="px-6 pb-4 pt-3 border-t border-border mt-auto flex items-center justify-between text-xs text-muted font-medium flex-wrap gap-1">
+                        <span className="truncate">Recorded by: <span className="font-bold text-heading">{vital.VIT_RECORDED_BY || 'Clinician on duty'}</span></span>
+                        {vital.VIT_WEIGHT ? (
+                          <span className="shrink-0">Weight: <span className="font-mono font-bold text-heading">{vital.VIT_WEIGHT} lbs</span></span>
+                        ) : (
+                          <span className="shrink-0 text-muted-foreground text-[11px]">Weight: Standard</span>
                         )}
-                      </CardContent>
+                      </div>
                     </Card>
                   </motion.div>
                 );

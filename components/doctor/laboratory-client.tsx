@@ -262,74 +262,82 @@ export default function DoctorLaboratoryClient() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.04 }}
+                    className="h-full"
                   >
-                    <Card className="card overflow-hidden border border-border shadow-lg">
+                    <Card className="card overflow-hidden border border-border shadow-lg flex flex-col justify-between h-full">
                       <div className="card-accent-bar" />
-                      <CardHeader className="flex flex-row items-start justify-between pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                            <FlaskConical className="w-5 h-5" />
+                      <div>
+                        <CardHeader className="flex flex-row items-start justify-between pb-3 gap-2">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                              <FlaskConical className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-lg font-bold text-heading">
+                                {patientName}
+                              </CardTitle>
+                              <div className="text-xs text-muted mt-1.5 flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-heading">Lab #{lab.LAB_NUMBER}</span>
+                                {lab.LAB_PAT_NUMBER && (
+                                  <>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="table-id-link font-mono font-bold whitespace-nowrap">{lab.LAB_PAT_NUMBER}</span>
+                                  </>
+                                )}
+                                <span className="text-muted-foreground">•</span>
+                                <StatusBadge status={lab.LAB_STATUS || 'Completed'} showIcon />
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg font-bold text-heading">
-                              Lab #{lab.LAB_NUMBER}
-                            </CardTitle>
-                            <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                              <User className="w-3 h-3 text-primary" />
-                              <span className="font-medium text-foreground">{patientName}</span>
-                              {lab.LAB_PAT_NUMBER && (
-                                <span className="table-id-link">({lab.LAB_PAT_NUMBER})</span>
-                              )}
-                            </p>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(lab)}
+                              className="table-action-edit hover-lift cursor-pointer h-8 w-8"
+                              title="Edit Lab Test"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDelete(lab)}
+                              disabled={safeDelete.isDeleting}
+                              className="table-action-delete hover-lift cursor-pointer h-8 w-8"
+                              title="Delete Lab Test"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <StatusBadge status={lab.LAB_STATUS || 'Completed'} showIcon />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(lab)}
-                            className="table-action-edit hover-lift cursor-pointer h-8 w-8"
-                            title="Edit Lab Test"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete(lab)}
-                            disabled={safeDelete.isDeleting}
-                            className="table-action-delete hover-lift cursor-pointer h-8 w-8"
-                            title="Delete Lab Test"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="bg-card p-2.5 rounded-lg border border-border">
-                            <span className="text-muted block text-[10px] uppercase font-semibold">Ordered Date</span>
-                            <span className="font-medium text-heading mt-0.5 block">{formatDate(lab.LAB_DATE_REC)}</span>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                              <span className="text-muted block text-[10px] uppercase font-semibold">Ordered Date</span>
+                              <span className="font-medium text-heading mt-0.5 block">{formatDate(lab.LAB_DATE_REC)}</span>
+                            </div>
+                            <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                              <span className="text-muted block text-[10px] uppercase font-semibold">Diagnosis / Ailment</span>
+                              <span className="font-medium text-heading mt-0.5 block truncate">{lab.LAB_PAT_AILMENT || 'General Panel'}</span>
+                            </div>
                           </div>
-                          <div className="bg-card p-2.5 rounded-lg border border-border">
-                            <span className="text-muted block text-[10px] uppercase font-semibold">Diagnosis / Ailment</span>
-                            <span className="font-medium text-heading mt-0.5 block truncate">{lab.LAB_PAT_AILMENT || 'General Panel'}</span>
-                          </div>
-                        </div>
-                        {lab.LAB_PAT_TESTS && (
-                          <div className="mt-2.5 p-2.5 rounded-lg bg-card/50 border border-border text-xs">
-                            <span className="font-semibold text-foreground block mb-0.5">Tests Ordered:</span>
-                            <p className="text-muted line-clamp-1">{lab.LAB_PAT_TESTS}</p>
-                          </div>
-                        )}
-                        {lab.LAB_PAT_RESULTS && (
-                          <div className="mt-2.5 p-2.5 rounded-lg bg-kpi-success-subtle border border-border text-xs">
-                            <span className="font-semibold text-kpi-success block mb-0.5">Lab Results:</span>
-                            <p className="text-foreground line-clamp-2">{lab.LAB_PAT_RESULTS}</p>
-                          </div>
-                        )}
-                      </CardContent>
+                          {lab.LAB_PAT_TESTS && (
+                            <div className="mt-2.5 p-2.5 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border text-xs">
+                              <span className="font-semibold text-foreground block mb-0.5">Tests Ordered:</span>
+                              <p className="text-muted line-clamp-1">{lab.LAB_PAT_TESTS}</p>
+                            </div>
+                          )}
+                          {lab.LAB_PAT_RESULTS && (
+                            <div className="mt-2.5 p-2.5 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border text-xs">
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Lab Results:
+                              </span>
+                              <p className="text-foreground font-semibold line-clamp-2">{lab.LAB_PAT_RESULTS}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </div>
                     </Card>
                   </motion.div>
                 );

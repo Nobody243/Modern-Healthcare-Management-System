@@ -259,68 +259,72 @@ export default function DoctorPatientTransfersClient() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.04 }}
+                    className="h-full"
                   >
-                    <Card className="card overflow-hidden border border-border shadow-lg">
+                    <Card className="card overflow-hidden border border-border shadow-lg flex flex-col justify-between h-full">
                       <div className="card-accent-bar" />
-                      <CardHeader className="flex flex-row items-start justify-between pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                            <ArrowLeftRight className="w-5 h-5" />
+                      <div>
+                        <CardHeader className="flex flex-row items-start justify-between pb-3 gap-2">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                              <ArrowLeftRight className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-lg font-bold text-heading">
+                                {patientName}
+                              </CardTitle>
+                              <div className="text-xs text-muted mt-1.5 flex items-center gap-2 flex-wrap">
+                                <span className="table-id-link font-mono font-bold whitespace-nowrap">{transfer.PT_PAT_NUMBER}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="font-medium text-muted">{formatDate(transfer.PT_TRANSFER_DATE)}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <StatusBadge status={transfer.PT_STATUS || 'Pending'} showIcon />
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg font-bold text-heading">
-                              {patientName}
-                            </CardTitle>
-                            <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                              <span className="table-id-link">{transfer.PT_PAT_NUMBER}</span>
-                              <span>•</span>
-                              <span>{formatDate(transfer.PT_TRANSFER_DATE)}</span>
-                            </p>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(transfer)}
+                              className="table-action-edit hover-lift cursor-pointer h-8 w-8"
+                              title="Edit Transfer"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDelete(transfer)}
+                              disabled={safeDelete.isDeleting}
+                              className="table-action-delete hover-lift cursor-pointer h-8 w-8"
+                              title="Delete Transfer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <StatusBadge status={transfer.PT_STATUS || 'Pending'} showIcon />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(transfer)}
-                            className="table-action-edit hover-lift cursor-pointer h-8 w-8"
-                            title="Edit Transfer"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete(transfer)}
-                            disabled={safeDelete.isDeleting}
-                            className="table-action-delete hover-lift cursor-pointer h-8 w-8"
-                            title="Delete Transfer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="p-3 rounded-lg bg-card border border-border mb-3">
-                          <span className="text-muted block text-[10px] uppercase font-semibold mb-1">Ward Route</span>
-                          <div className="flex items-center gap-2 text-xs font-medium">
-                            <span className="px-2.5 py-1 rounded bg-card text-foreground border border-border">
-                              {transfer.PT_FROM_WARD || 'Origin Ward'}
-                            </span>
-                            <ArrowRight className="w-4 h-4 text-primary shrink-0" />
-                            <span className="badge-theme-primary px-2.5 py-1 rounded">
-                              {transfer.PT_TO_WARD || 'Destination Ward'}
-                            </span>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <div className="p-3 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border mb-3">
+                            <span className="text-muted block text-[10px] uppercase font-semibold mb-1">Ward Route</span>
+                            <div className="flex items-center gap-2 text-xs font-medium flex-wrap">
+                              <span className="px-2.5 py-1 rounded bg-card text-foreground border border-border">
+                                {transfer.PT_FROM_WARD || 'Origin Ward'}
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                              <span className="badge-theme-primary px-2.5 py-1 rounded">
+                                {transfer.PT_TO_WARD || 'Destination Ward'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        {transfer.PT_REASON && (
-                          <div className="p-2.5 rounded-lg bg-card/50 border border-border text-xs text-muted">
-                            <span className="font-semibold text-foreground block mb-0.5">Clinical Justification:</span>
-                            <p className="line-clamp-2">{transfer.PT_REASON}</p>
-                          </div>
-                        )}
-                      </CardContent>
+                          {transfer.PT_REASON && (
+                            <div className="p-2.5 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border text-xs text-muted">
+                              <span className="font-semibold text-foreground block mb-0.5">Clinical Justification:</span>
+                              <p className="line-clamp-2">{transfer.PT_REASON}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </div>
                     </Card>
                   </motion.div>
                 );

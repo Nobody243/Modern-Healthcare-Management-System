@@ -260,68 +260,72 @@ export default function DoctorPrescriptionsClient() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: index * 0.04 }}
+                  className="h-full"
                 >
-                  <Card className="card overflow-hidden border border-border hover:border-border/80 transition-all bg-card shadow-lg">
+                  <Card className="card overflow-hidden border border-border hover:border-border/80 transition-all bg-card shadow-lg flex flex-col justify-between h-full">
                     <div className="card-accent-bar" />
-                    <CardHeader className="flex flex-row items-start justify-between pb-3">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                          <FileText className="w-5 h-5" />
+                    <div>
+                      <CardHeader className="flex flex-row items-start justify-between pb-3 gap-2">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-lg font-bold text-heading">
+                              {prescription.PRES_MEDICATION}
+                            </CardTitle>
+                            <div className="text-xs text-muted mt-1.5 flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-foreground">{prescription.PRES_PAT_NAME}</span>
+                              <span className="table-id-link font-mono font-bold whitespace-nowrap">({prescription.PRES_PAT_NUMBER})</span>
+                              <span className="text-muted-foreground">•</span>
+                              <StatusBadge status={prescription.PRES_STATUS || 'Active'} showIcon />
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <CardTitle className="text-lg font-bold text-heading">
-                            {prescription.PRES_MEDICATION}
-                          </CardTitle>
-                          <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                            <User className="w-3 h-3 text-primary" />
-                            <span className="font-medium text-foreground">{prescription.PRES_PAT_NAME}</span>
-                            <span className="table-id-link">({prescription.PRES_PAT_NUMBER})</span>
-                          </p>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEdit(prescription)}
+                            className="table-action-edit hover-lift cursor-pointer h-8 w-8"
+                            title="Edit Prescription"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDelete(prescription)}
+                            disabled={safeDelete.isDeleting}
+                            className="table-action-delete hover-lift cursor-pointer h-8 w-8"
+                            title="Delete Prescription"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <StatusBadge status={prescription.PRES_STATUS || 'Active'} showIcon />
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleEdit(prescription)}
-                          className="table-action-edit hover-lift cursor-pointer h-8 w-8"
-                          title="Edit Prescription"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDelete(prescription)}
-                          disabled={safeDelete.isDeleting}
-                          className="table-action-delete hover-lift cursor-pointer h-8 w-8"
-                          title="Delete Prescription"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-                        <div className="bg-card p-2.5 rounded-lg border border-border">
-                          <span className="text-muted block text-[10px] uppercase font-semibold">Dosage</span>
-                          <span className="font-medium text-heading mt-0.5 block">{prescription.PRES_DOSAGE || 'Standard'}</span>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+                          <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                            <span className="text-muted block text-[10px] uppercase font-semibold">Dosage</span>
+                            <span className="font-medium text-heading mt-0.5 block truncate">{prescription.PRES_DOSAGE || 'Standard'}</span>
+                          </div>
+                          <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                            <span className="text-muted block text-[10px] uppercase font-semibold">Frequency</span>
+                            <span className="font-medium text-heading mt-0.5 block truncate">{prescription.PRES_FREQUENCY || 'Once daily'}</span>
+                          </div>
+                          <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                            <span className="text-muted block text-[10px] uppercase font-semibold">Duration</span>
+                            <span className="font-medium text-heading mt-0.5 block truncate">{prescription.PRES_DURATION || '7 Days'}</span>
+                          </div>
                         </div>
-                        <div className="bg-card p-2.5 rounded-lg border border-border">
-                          <span className="text-muted block text-[10px] uppercase font-semibold">Frequency</span>
-                          <span className="font-medium text-heading mt-0.5 block truncate">{prescription.PRES_FREQUENCY || 'Once daily'}</span>
-                        </div>
-                        <div className="bg-card p-2.5 rounded-lg border border-border">
-                          <span className="text-muted block text-[10px] uppercase font-semibold">Duration</span>
-                          <span className="font-medium text-heading mt-0.5 block">{prescription.PRES_DURATION || '7 Days'}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-muted pt-2 border-t border-border">
-                        <span>Rx No: <span className="table-id-link">{prescription.PRES_NUMBER}</span></span>
-                        <span>Refills: <span className="font-mono font-semibold text-kpi-warning">{prescription.PRES_REFILLS_REMAINING || 0}</span></span>
-                      </div>
-                    </CardContent>
+                      </CardContent>
+                    </div>
+
+                    <div className="px-6 pb-4 pt-2.5 border-t border-border mt-auto flex items-center justify-between text-xs text-muted">
+                      <span>Rx No: <span className="table-id-link font-mono font-bold">{prescription.PRES_NUMBER}</span></span>
+                      <span>Refills: <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{prescription.PRES_REFILLS_REMAINING || 0}</span></span>
+                    </div>
                   </Card>
                 </motion.div>
               ))}

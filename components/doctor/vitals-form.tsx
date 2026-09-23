@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { Activity, HeartPulse, User, Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,22 +16,24 @@ import {
 } from '@/components/ui/dialog';
 import { calculateMAP, evaluateBloodPressure } from '@/lib/vitals-evaluator';
 
-interface Vital {
-  VIT_ID: number;
-  VIT_PAT_NUMBER: string;
-  VIT_WEIGHT: number;
-  VIT_BODYTEMP: number;
-  VIT_BLOOD_PRESSURE: string;
-  VIT_HEARTPULSE: number;
-  VIT_RESPIRATION: number;
-  VIT_OXYGEN_SAT: number;
-  VIT_RECORDED_DATE: string;
-}
-
 interface Patient {
   PAT_NUMBER: string;
   PAT_FNAME: string;
   PAT_LNAME: string;
+}
+
+interface Vital {
+  VIT_ID: number;
+  VIT_PAT_NUMBER: string;
+  VIT_PAT_NAME?: string;
+  VIT_WEIGHT: number | string;
+  VIT_BODYTEMP: number | string;
+  VIT_BLOOD_PRESSURE: string;
+  VIT_HEARTPULSE: number | string;
+  VIT_RESPIRATION: number | string;
+  VIT_OXYGEN_SAT: number | string;
+  VIT_RECORDED_DATE: string;
+  VIT_RECORDED_TIME?: string;
 }
 
 interface VitalsFormProps {
@@ -48,58 +51,64 @@ export function VitalsForm({
   vital,
   doctorNumber,
 }: VitalsFormProps) {
-  const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [formData, setFormData] = useState({
-    patNumber: '',
-    weight: '',
-    bodyTemp: '',
-    bloodPressure: '',
-    heartPulse: '',
-    respiration: '',
-    oxygenSat: '',
-    recordedDate: new Date().toISOString().split('T')[0],
+    patNumber: vital?.VIT_PAT_NUMBER || '',
+    weight: vital?.VIT_WEIGHT || '',
+    bodyTemp: vital?.VIT_BODYTEMP || '',
+    bloodPressure: vital?.VIT_BLOOD_PRESSURE || '',
+    heartPulse: vital?.VIT_HEARTPULSE || '',
+    respiration: vital?.VIT_RESPIRATION || '',
+    oxygenSat: vital?.VIT_OXYGEN_SAT || '',
+    recordedDate: vital?.VIT_RECORDED_DATE
+      ? new Date(vital.VIT_RECORDED_DATE).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
   });
+  const [loading, setLoading] = useState(false);
 
-  const fetchPatients = useCallback(async () => {
-    if (!doctorNumber) return;
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  useEffect(() => {
+    if (vital) {
+      setFormData({
+        patNumber: vital.VIT_PAT_NUMBER || '',
+        weight: vital.VIT_WEIGHT || '',
+        bodyTemp: vital.VIT_BODYTEMP || '',
+        bloodPressure: vital.VIT_BLOOD_PRESSURE || '',
+        heartPulse: vital.VIT_HEARTPULSE || '',
+        respiration: vital.VIT_RESPIRATION || '',
+        oxygenSat: vital.VIT_OXYGEN_SAT || '',
+        recordedDate: vital.VIT_RECORDED_DATE
+          ? new Date(vital.VIT_RECORDED_DATE).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+      });
+    } else {
+      setFormData({
+        patNumber: '',
+        weight: '',
+        bodyTemp: '',
+        bloodPressure: '',
+        heartPulse: '',
+        respiration: '',
+        oxygenSat: '',
+        recordedDate: new Date().toISOString().split('T')[0],
+      });
+    }
+  }, [vital, open]);
+
+  const fetchPatients = async () => {
     try {
       const response = await fetch(`/api/doctors/${doctorNumber}/patients`);
-      const data = await response.json();
-      setPatients(Array.isArray(data) ? data : []);
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(Array.isArray(data) ? data : []);
+      }
     } catch (error) {
       console.error('Error fetching patients:', error);
     }
-  }, [doctorNumber]);
-
-  useEffect(() => {
-    if (open) {
-      fetchPatients();
-      if (vital) {
-        setFormData({
-          patNumber: vital.VIT_PAT_NUMBER || '',
-          weight: String(vital.VIT_WEIGHT || ''),
-          bodyTemp: String(vital.VIT_BODYTEMP || ''),
-          bloodPressure: vital.VIT_BLOOD_PRESSURE || '',
-          heartPulse: String(vital.VIT_HEARTPULSE || ''),
-          respiration: String(vital.VIT_RESPIRATION || ''),
-          oxygenSat: String(vital.VIT_OXYGEN_SAT || ''),
-          recordedDate: vital.VIT_RECORDED_DATE?.split('T')[0] || new Date().toISOString().split('T')[0],
-        });
-      } else {
-        setFormData({
-          patNumber: '',
-          weight: '',
-          bodyTemp: '',
-          bloodPressure: '',
-          heartPulse: '',
-          respiration: '',
-          oxygenSat: '',
-          recordedDate: new Date().toISOString().split('T')[0],
-        });
-      }
-    }
-  }, [open, vital, fetchPatients]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,8 +118,12 @@ export function VitalsForm({
       const url = '/api/vitals';
       const method = vital ? 'PUT' : 'POST';
 
-      const selectedPatient = patients.find(p => p.PAT_NUMBER === formData.patNumber);
-      const patientName = selectedPatient ? `${selectedPatient.PAT_FNAME} ${selectedPatient.PAT_LNAME}` : '';
+      const selectedPatient = patients.find(
+        (p) => p.PAT_NUMBER === formData.patNumber
+      );
+      const patientName = selectedPatient
+        ? `${selectedPatient.PAT_FNAME} ${selectedPatient.PAT_LNAME}`
+        : vital?.VIT_PAT_NAME || '';
 
       const response = await fetch(url, {
         method,
@@ -124,13 +137,13 @@ export function VitalsForm({
           heartPulse: formData.heartPulse,
           respiration: formData.respiration,
           oxygenSat: formData.oxygenSat,
-          recordedBy: doctorNumber,
+          recordedDate: formData.recordedDate,
           ...(vital ? { id: vital.VIT_ID } : {}),
         }),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to save vitals');
       }
@@ -163,171 +176,229 @@ export function VitalsForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border border-border">
-        <DialogHeader>
-          <DialogTitle>
-            {vital ? 'Edit Vitals' : 'Record Vitals'}
-          </DialogTitle>
-          <DialogDescription>
-            {vital
-              ? 'Update patient vital signs (Press Ctrl+Enter to save)'
-              : 'Record vital signs for your patient (Press Ctrl+Enter to save)'}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700/80">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400">
+              <HeartPulse className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-heading">
+                {vital ? 'Edit Vital Telemetry' : 'Record Patient Vital Signs'}
+              </DialogTitle>
+              <DialogDescription className="text-muted text-xs sm:text-sm mt-0.5">
+                {vital
+                  ? 'Update physiological telemetry readings and vital statistics'
+                  : 'Log patient vital parameters including blood pressure, pulse, and oxygenation'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="patNumber">Patient *</Label>
-              <Combobox
-                options={patientOptions}
-                value={formData.patNumber}
-                onChange={(value) =>
-                  setFormData({ ...formData, patNumber: value })
-                }
-                placeholder="Select patient..."
-                searchPlaceholder="Search patients..."
-                emptyMessage="No patients found"
-                disabled={!!vital}
-              />
-            </div>
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-6 pt-4">
+          {/* Section 1: Patient Selection & Timestamp */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <User className="w-3.5 h-3.5 text-primary" />
+              Patient & Observation Date
+            </h3>
 
-            <div>
-              <Label htmlFor="weight">Weight (lbs) *</Label>
-              <Input
-                id="weight"
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={formData.weight}
-                onChange={(e) =>
-                  setFormData({ ...formData, weight: e.target.value })
-                }
-                required
-                placeholder="e.g., 155"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="bodyTemp">Body Temperature (°F) *</Label>
-              <Input
-                id="bodyTemp"
-                type="number"
-                step="0.1"
-                min="90"
-                max="110"
-                value={formData.bodyTemp}
-                onChange={(e) =>
-                  setFormData({ ...formData, bodyTemp: e.target.value })
-                }
-                required
-                placeholder="e.g., 98.6"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="bloodPressure">Blood Pressure *</Label>
-                {formData.bloodPressure.includes('/') && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${liveBpEval.badgeClass}`}>
-                    {liveBpEval.label}
-                  </span>
-                )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="patNumber" className="label-hospital">
+                  Target Patient *
+                </Label>
+                <Combobox
+                  options={patientOptions}
+                  value={formData.patNumber}
+                  onChange={(value) =>
+                    setFormData({ ...formData, patNumber: value })
+                  }
+                  placeholder="Select patient..."
+                  searchPlaceholder="Search patients..."
+                  emptyMessage="No patients found"
+                  disabled={!!vital}
+                />
               </div>
-              <Input
-                id="bloodPressure"
-                value={formData.bloodPressure}
-                onChange={(e) =>
-                  setFormData({ ...formData, bloodPressure: e.target.value })
-                }
-                required
-                placeholder="e.g., 120/80"
-              />
-              {liveMap && (
-                <p className="text-[11px] font-mono text-cyan-700 dark:text-cyan-300 font-semibold mt-1">
-                  Est. MAP: ~{liveMap} mmHg
-                </p>
-              )}
-            </div>
 
-            <div>
-              <Label htmlFor="heartPulse">Heart Pulse (bpm) *</Label>
-              <Input
-                id="heartPulse"
-                type="number"
-                min="30"
-                max="220"
-                value={formData.heartPulse}
-                onChange={(e) =>
-                  setFormData({ ...formData, heartPulse: e.target.value })
-                }
-                required
-                placeholder="e.g., 72"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="respiration">Respiration Rate (breaths/min) *</Label>
-              <Input
-                id="respiration"
-                type="number"
-                min="5"
-                max="60"
-                value={formData.respiration}
-                onChange={(e) =>
-                  setFormData({ ...formData, respiration: e.target.value })
-                }
-                required
-                placeholder="e.g., 16"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="oxygenSat">Oxygen Saturation (%) *</Label>
-              <Input
-                id="oxygenSat"
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
-                value={formData.oxygenSat}
-                onChange={(e) =>
-                  setFormData({ ...formData, oxygenSat: e.target.value })
-                }
-                required
-                placeholder="e.g., 98"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="recordedDate">Recorded Date *</Label>
-              <Input
-                id="recordedDate"
-                type="date"
-                value={formData.recordedDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, recordedDate: e.target.value })
-                }
-                required
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="recordedDate" className="label-hospital">
+                  Observation Date *
+                </Label>
+                <Input
+                  id="recordedDate"
+                  type="date"
+                  value={formData.recordedDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, recordedDate: e.target.value })
+                  }
+                  required
+                  className="input-hospital h-11"
+                />
+              </div>
             </div>
           </div>
 
-          <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
-            <span className="text-[11px] text-muted-foreground hidden sm:inline">
-              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs border border-border font-mono">Ctrl+Enter</kbd> to submit
+          {/* Section 2: Physiological Measurements */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <Activity className="w-3.5 h-3.5 text-primary" />
+              Vital Sign Telemetry
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bloodPressure" className="label-hospital">
+                    Blood Pressure (mmHg) *
+                  </Label>
+                  {formData.bloodPressure.includes('/') && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${liveBpEval.badgeClass}`}>
+                      {liveBpEval.label}
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="bloodPressure"
+                  value={formData.bloodPressure}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bloodPressure: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 120/80"
+                  className="input-hospital h-11"
+                />
+                {liveMap && (
+                  <p className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
+                    Est. MAP: ~{liveMap} mmHg
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="heartPulse" className="label-hospital">
+                  Heart Pulse (bpm) *
+                </Label>
+                <Input
+                  id="heartPulse"
+                  type="number"
+                  min="30"
+                  max="220"
+                  value={formData.heartPulse}
+                  onChange={(e) =>
+                    setFormData({ ...formData, heartPulse: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 72"
+                  className="input-hospital h-11"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="bodyTemp" className="label-hospital">
+                  Body Temp (°F) *
+                </Label>
+                <Input
+                  id="bodyTemp"
+                  type="number"
+                  step="0.1"
+                  min="90"
+                  max="110"
+                  value={formData.bodyTemp}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bodyTemp: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 98.6"
+                  className="input-hospital h-11"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="oxygenSat" className="label-hospital">
+                  Oxygen Saturation (%) *
+                </Label>
+                <Input
+                  id="oxygenSat"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={formData.oxygenSat}
+                  onChange={(e) =>
+                    setFormData({ ...formData, oxygenSat: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 98"
+                  className="input-hospital h-11"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="respiration" className="label-hospital">
+                  Respiration (breaths/min) *
+                </Label>
+                <Input
+                  id="respiration"
+                  type="number"
+                  min="5"
+                  max="60"
+                  value={formData.respiration}
+                  onChange={(e) =>
+                    setFormData({ ...formData, respiration: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 16"
+                  className="input-hospital h-11"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="weight" className="label-hospital">
+                  Weight (lbs) *
+                </Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={formData.weight}
+                  onChange={(e) =>
+                    setFormData({ ...formData, weight: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., 155"
+                  className="input-hospital h-11"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-[11px] text-muted hidden sm:inline">
+              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs border border-border font-mono">Ctrl+Enter</kbd> to save
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
+                className="btn-secondary h-11 px-5 rounded-xl cursor-pointer"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="btn-primary">
-                {loading ? 'Saving...' : vital ? 'Update' : 'Record'}
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="btn-primary h-11 px-6 rounded-xl flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                <CheckCircle className="w-4 h-4" />
+                {loading ? 'Saving...' : vital ? 'Update Vitals' : 'Record Vitals'}
               </Button>
             </div>
           </DialogFooter>

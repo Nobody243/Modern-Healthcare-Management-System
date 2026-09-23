@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { Scissors, User, Calendar, Clock, FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,20 +23,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface Surgery {
-  SURG_ID: number;
-  SURG_PAT_NUMBER: string;
-  SURG_DATE: string;
-  SURG_TYPE: string;
-  SURG_STATUS: string;
-  SURG_DURATION: string;
-  SURG_NOTES: string;
-}
-
 interface Patient {
   PAT_NUMBER: string;
   PAT_FNAME: string;
   PAT_LNAME: string;
+}
+
+interface Surgery {
+  SURG_ID: number;
+  SURG_NUMBER: string;
+  SURG_PAT_NUMBER: string;
+  SURG_PAT_NAME?: string;
+  SURG_TYPE: string;
+  SURG_DATE: string;
+  SURG_DURATION?: string;
+  SURG_STATUS: string;
+  SURG_NOTES?: string;
 }
 
 interface SurgeryFormProps {
@@ -53,52 +56,54 @@ export function SurgeryForm({
   surgery,
   doctorNumber,
 }: SurgeryFormProps) {
-  const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [formData, setFormData] = useState({
-    patNumber: '',
-    date: new Date().toISOString().split('T')[0],
-    type: '',
-    status: 'Scheduled',
-    duration: '',
-    notes: '',
+    patNumber: surgery?.SURG_PAT_NUMBER || '',
+    type: surgery?.SURG_TYPE || '',
+    date: surgery?.SURG_DATE ? new Date(surgery.SURG_DATE).toISOString().split('T')[0] : '',
+    duration: surgery?.SURG_DURATION || '',
+    status: surgery?.SURG_STATUS || 'Scheduled',
+    notes: surgery?.SURG_NOTES || '',
   });
+  const [loading, setLoading] = useState(false);
 
-  const fetchPatients = useCallback(async () => {
-    if (!doctorNumber) return;
+  useEffect(() => {
+    fetchPatients();
+  }, []);
+
+  useEffect(() => {
+    if (surgery) {
+      setFormData({
+        patNumber: surgery.SURG_PAT_NUMBER || '',
+        type: surgery.SURG_TYPE || '',
+        date: surgery.SURG_DATE ? new Date(surgery.SURG_DATE).toISOString().split('T')[0] : '',
+        duration: surgery.SURG_DURATION || '',
+        status: surgery.SURG_STATUS || 'Scheduled',
+        notes: surgery.SURG_NOTES || '',
+      });
+    } else {
+      setFormData({
+        patNumber: '',
+        type: '',
+        date: new Date().toISOString().split('T')[0],
+        duration: '',
+        status: 'Scheduled',
+        notes: '',
+      });
+    }
+  }, [surgery, open]);
+
+  const fetchPatients = async () => {
     try {
       const response = await fetch(`/api/doctors/${doctorNumber}/patients`);
-      const data = await response.json();
-      setPatients(Array.isArray(data) ? data : []);
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(Array.isArray(data) ? data : []);
+      }
     } catch (error) {
       console.error('Error fetching patients:', error);
     }
-  }, [doctorNumber]);
-
-  useEffect(() => {
-    if (open) {
-      fetchPatients();
-      if (surgery) {
-        setFormData({
-          patNumber: surgery.SURG_PAT_NUMBER || '',
-          date: surgery.SURG_DATE?.split('T')[0] || new Date().toISOString().split('T')[0],
-          type: surgery.SURG_TYPE || '',
-          status: surgery.SURG_STATUS || 'Scheduled',
-          duration: surgery.SURG_DURATION || '',
-          notes: surgery.SURG_NOTES || '',
-        });
-      } else {
-        setFormData({
-          patNumber: '',
-          date: new Date().toISOString().split('T')[0],
-          type: '',
-          status: 'Scheduled',
-          duration: '',
-          notes: '',
-        });
-      }
-    }
-  }, [open, surgery, fetchPatients]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,33 +113,31 @@ export function SurgeryForm({
       const url = '/api/surgery';
       const method = surgery ? 'PUT' : 'POST';
 
-      const selectedPatient = patients.find(p => p.PAT_NUMBER === formData.patNumber);
-      
-      const doctorResponse = await fetch('/api/doctors/me');
-      const doctor = await doctorResponse.json();
-
-      const payload = {
-        patientNumber: formData.patNumber,
-        patientName: selectedPatient ? `${selectedPatient.PAT_FNAME} ${selectedPatient.PAT_LNAME}` : '',
-        doctorNumber: doctorNumber,
-        doctorName: `${doctor.DOC_FNAME} ${doctor.DOC_LNAME}`,
-        date: formData.date,
-        type: formData.type,
-        status: formData.status,
-        duration: formData.duration,
-        notes: formData.notes,
-        ...(surgery ? { id: surgery.SURG_ID } : {}),
-      };
+      const selectedPatient = patients.find(
+        (p) => p.PAT_NUMBER === formData.patNumber
+      );
+      const patientName = selectedPatient
+        ? `${selectedPatient.PAT_FNAME} ${selectedPatient.PAT_LNAME}`
+        : surgery?.SURG_PAT_NAME || '';
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          patientNumber: formData.patNumber,
+          patientName: patientName,
+          type: formData.type,
+          date: formData.date,
+          duration: formData.duration,
+          status: formData.status,
+          notes: formData.notes,
+          doctorNumber: doctorNumber,
+          ...(surgery ? { id: surgery.SURG_ID } : {}),
+        }),
       });
 
       if (!response.ok) {
         const text = await response.text();
-        console.error('Surgery API Error:', text);
         let errorData;
         try {
           errorData = JSON.parse(text);
@@ -162,117 +165,173 @@ export function SurgeryForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border border-border">
-        <DialogHeader>
-          <DialogTitle>
-            {surgery ? 'Edit Surgery' : 'Schedule Surgery'}
-          </DialogTitle>
-          <DialogDescription>
-            {surgery
-              ? 'Update surgery details'
-              : 'Schedule a new surgery for your patient'}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700/80">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400">
+              <Scissors className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-heading">
+                {surgery ? 'Edit Surgical Procedure' : 'Schedule Surgical Procedure'}
+              </DialogTitle>
+              <DialogDescription className="text-muted text-xs sm:text-sm mt-0.5">
+                {surgery
+                  ? 'Update surgical scheduling and operation parameters'
+                  : 'Schedule an operative procedure and theater booking for your patient'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="patNumber">Patient *</Label>
-              <Combobox
-                options={patientOptions}
-                value={formData.patNumber}
-                onChange={(value) =>
-                  setFormData({ ...formData, patNumber: value })
-                }
-                placeholder="Select patient..."
-                searchPlaceholder="Search patients..."
-                emptyMessage="No patients found"
-                disabled={!!surgery}
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          {/* Section 1: Patient & Procedure Type */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <User className="w-3.5 h-3.5 text-primary" />
+              Patient & Procedure Classification
+            </h3>
 
-            <div>
-              <Label htmlFor="date">Surgery Date *</Label>
-              <Input
-                id="date"
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-                required
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="patNumber" className="label-hospital">
+                  Target Patient *
+                </Label>
+                <Combobox
+                  options={patientOptions}
+                  value={formData.patNumber}
+                  onChange={(value) =>
+                    setFormData({ ...formData, patNumber: value })
+                  }
+                  placeholder="Select patient..."
+                  searchPlaceholder="Search patients..."
+                  emptyMessage="No patients found"
+                  disabled={!!surgery}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Scheduled">Scheduled</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label htmlFor="type" className="label-hospital">
+                  Surgery Type / Procedure *
+                </Label>
+                <Input
+                  id="type"
+                  value={formData.type}
+                  onChange={(e) =>
+                    setFormData({ ...formData, type: e.target.value })
+                  }
+                  required
+                  placeholder="e.g., Appendectomy, Cardiac Angioplasty"
+                  className="input-hospital h-11"
+                />
+              </div>
             </div>
+          </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="type">Surgery Type *</Label>
-              <Input
-                id="type"
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({ ...formData, type: e.target.value })
-                }
-                required
-                placeholder="e.g., Appendectomy"
-              />
+          {/* Section 2: Scheduling & Theater Details */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <Calendar className="w-3.5 h-3.5 text-primary" />
+              Operation Theater & Scheduling
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="date" className="label-hospital">
+                  Surgery Date *
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  required
+                  className="input-hospital h-11"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="duration" className="label-hospital">
+                  Est. Duration
+                </Label>
+                <Input
+                  id="duration"
+                  value={formData.duration}
+                  onChange={(e) =>
+                    setFormData({ ...formData, duration: e.target.value })
+                  }
+                  placeholder="e.g., 2 hours 30 mins"
+                  className="input-hospital h-11"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="label-hospital">
+                  Procedure Status
+                </Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
+                  <SelectTrigger className="select-hospital h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Scheduled">Scheduled</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Input
-                id="duration"
-                value={formData.duration}
-                onChange={(e) =>
-                  setFormData({ ...formData, duration: e.target.value })
-                }
-                placeholder="e.g., 2 hours"
-              />
-            </div>
+          {/* Section 3: Clinical Notes */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              Surgical Notes & Pre-Op Instructions
+            </h3>
 
-            <div className="col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="label-hospital">
+                Pre-Op Preparation & Notes
+              </Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) =>
                   setFormData({ ...formData, notes: e.target.value })
                 }
-                placeholder="Additional notes or observations..."
+                placeholder="Pre-operative observations, anesthesia requirements, post-op instructions..."
                 rows={3}
+                className="textarea-hospital"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700/80 flex flex-row items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="btn-secondary h-11 px-5 rounded-xl cursor-pointer"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="btn-primary">
-              {loading ? 'Saving...' : surgery ? 'Update' : 'Schedule'}
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="btn-primary h-11 px-6 rounded-xl flex items-center gap-2 shadow-lg cursor-pointer"
+            >
+              <CheckCircle className="w-4 h-4" />
+              {loading ? 'Saving...' : surgery ? 'Update Procedure' : 'Schedule Procedure'}
             </Button>
           </DialogFooter>
         </form>

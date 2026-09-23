@@ -192,61 +192,67 @@ export default function RecordsClient({ doctorId }: RecordsClientProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.04 }}
+                className="h-full"
               >
-                <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md">
+                <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md flex flex-col justify-between h-full">
                   <div className="card-accent-bar" />
-                  <CardHeader className="flex flex-row items-start justify-between pb-3">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                        <FileText className="w-5 h-5" />
+                  <div>
+                    <CardHeader className="flex flex-row items-start justify-between pb-3 gap-2">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-lg font-bold text-heading">
+                            {record.MDR_PAT_NAME}
+                          </CardTitle>
+                          <div className="text-xs text-muted mt-1.5 flex items-center gap-2 flex-wrap">
+                            <span className="table-id-link font-mono font-bold whitespace-nowrap">{record.MDR_PAT_NUMBER}</span>
+                            <span className="text-muted-foreground">•</span>
+                            <span className="font-mono text-muted text-xs whitespace-nowrap">{record.MDR_NUMBER}</span>
+                            <span className="text-muted-foreground">•</span>
+                            {record.IS_OWN_RECORD === 'Y' ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Your Record
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20 shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                                Historical Chart
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg font-bold text-heading">
-                          {record.MDR_PAT_NAME}
-                        </CardTitle>
-                        <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                          <span className="table-id-link">{record.MDR_PAT_NUMBER}</span>
-                          <span>•</span>
-                          <span className="font-mono text-muted">{record.MDR_NUMBER}</span>
-                        </p>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                          <span className="text-muted block text-[10px] uppercase font-semibold">Date of Record</span>
+                          <span className="font-medium text-heading mt-0.5 block">{formatDate(record.MDR_DATE_REC)}</span>
+                        </div>
+                        <div className="bg-muted/40 dark:bg-muted/20 p-2.5 rounded-lg border border-border">
+                          <span className="text-muted block text-[10px] uppercase font-semibold">Age / Demographics</span>
+                          <span className="font-medium text-heading mt-0.5 block">{record.MDR_PAT_AGE ? `${record.MDR_PAT_AGE} yrs` : '—'}</span>
+                        </div>
                       </div>
-                    </div>
-                    {record.IS_OWN_RECORD === 'Y' ? (
-                      <Badge className="badge badge-success">
-                        Your Record
-                      </Badge>
-                    ) : (
-                      <Badge className="badge badge-purple">
-                        Historical Chart
-                      </Badge>
-                    )}
-                  </CardHeader>
-                  <CardContent className="pt-2">
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                      <div className="bg-card p-2.5 rounded-lg border border-border">
-                        <span className="text-muted block text-[10px] uppercase font-semibold">Date of Record</span>
-                        <span className="font-medium text-heading mt-0.5 block">{formatDate(record.MDR_DATE_REC)}</span>
-                      </div>
-                      <div className="bg-card p-2.5 rounded-lg border border-border">
-                        <span className="text-muted block text-[10px] uppercase font-semibold">Age / Demographics</span>
-                        <span className="font-medium text-heading mt-0.5 block">{record.MDR_PAT_AGE ? `${record.MDR_PAT_AGE} yrs` : '—'}</span>
-                      </div>
-                    </div>
-                    {record.MDR_PAT_AILMENT && (
-                      <div className="p-2.5 rounded-lg bg-card/50 border border-border text-xs mb-2">
-                        <span className="font-semibold text-foreground block mb-0.5">Clinical Diagnosis:</span>
-                        <p className="text-muted line-clamp-2">{record.MDR_PAT_AILMENT}</p>
-                      </div>
-                    )}
-                    {record.MDR_PAT_PRESCR && (
-                      <div className="p-2.5 rounded-lg bg-kpi-primary-subtle border border-primary/20 text-xs">
-                        <span className="font-semibold text-primary block mb-0.5 flex items-center gap-1">
-                          <Pill className="w-3 h-3" /> Prescribed Regimen:
-                        </span>
-                        <p className="text-foreground line-clamp-2">{record.MDR_PAT_PRESCR}</p>
-                      </div>
-                    )}
-                  </CardContent>
+                      {record.MDR_PAT_AILMENT && (
+                        <div className="p-2.5 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border text-xs mb-2">
+                          <span className="font-semibold text-foreground block mb-0.5">Clinical Diagnosis:</span>
+                          <p className="text-muted line-clamp-2">{record.MDR_PAT_AILMENT}</p>
+                        </div>
+                      )}
+                      {record.MDR_PAT_PRESCR && (
+                        <div className="p-2.5 rounded-lg bg-muted/40 dark:bg-muted/20 border border-border text-xs">
+                          <span className="font-bold text-primary dark:text-cyan-400 block mb-0.5 flex items-center gap-1.5">
+                            <Pill className="w-3.5 h-3.5 text-primary" /> Prescribed Regimen:
+                          </span>
+                          <p className="text-foreground font-semibold line-clamp-2">{record.MDR_PAT_PRESCR}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </div>
                 </Card>
               </motion.div>
             ))}

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, User, Phone, Stethoscope, Activity } from 'lucide-react';
+import { Loader2, User, Phone, Stethoscope, Activity, CheckCircle, Hospital } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,7 +104,7 @@ export function PatientForm({
         throw new Error(errorData.error || 'Failed to save patient');
       }
 
-      toast.success(patient ? 'Patient updated successfully' : 'Patient added successfully');
+      toast.success(patient ? 'Patient updated successfully' : 'Patient admitted successfully');
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -117,59 +117,69 @@ export function PatientForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={patient?.PAT_ID || 'new'} className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border border-border">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            {patient ? 'Edit Patient' : 'Add New Patient'}
-          </DialogTitle>
-          <DialogDescription>
-            {patient ? 'Update patient information' : 'Add a new patient to your care (you will be automatically assigned)'}
-          </DialogDescription>
+      <DialogContent key={patient?.PAT_ID || 'new'} className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700/80">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400">
+              <Hospital className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-heading">
+                {patient ? 'Edit Patient Record' : 'Admit New Patient'}
+              </DialogTitle>
+              <DialogDescription className="text-muted text-xs sm:text-sm mt-0.5">
+                {patient 
+                  ? 'Update clinical metadata and patient profile' 
+                  : 'Register and admit a new patient under your clinical care'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <motion.form
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           onSubmit={handleSubmit}
-          className="space-y-6 mt-4"
+          className="space-y-6 pt-4"
         >
-          {/* Personal Information */}
+          {/* Section 1: Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-border pb-2 text-foreground">
-              <User className="w-4 h-4 text-primary" />
-              Personal Information
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <User className="w-3.5 h-3.5 text-primary" />
+              Patient Personal Details
             </h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fname">First Name *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="fname" className="label-hospital">First Name *</Label>
                 <Input
                   id="fname"
                   name="fname"
                   defaultValue={patient?.PAT_FNAME}
                   required
-                  placeholder="John"
+                  placeholder="e.g., John"
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lname">Last Name *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="lname" className="label-hospital">Last Name *</Label>
                 <Input
                   id="lname"
                   name="lname"
                   defaultValue={patient?.PAT_LNAME}
                   required
-                  placeholder="Doe"
+                  placeholder="e.g., Doe"
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="dob" className="label-hospital">Date of Birth *</Label>
                 <Input
                   id="dob"
                   name="dob"
@@ -178,11 +188,12 @@ export function PatientForm({
                   defaultValue={patient?.PAT_DOB ? patient.PAT_DOB.split('T')[0] : '2000-01-01'}
                   required
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="age">Age *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="age" className="label-hospital">Age *</Label>
                 <Input
                   id="age"
                   name="age"
@@ -191,21 +202,22 @@ export function PatientForm({
                   required
                   placeholder="25"
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
               </div>
             </div>
           </div>
 
-          {/* Contact Information */}
+          {/* Section 2: Contact Information */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-border pb-2 text-foreground">
-              <Phone className="w-4 h-4 text-primary" />
-              Contact Information
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <Phone className="w-3.5 h-3.5 text-primary" />
+              Contact & Residential Information
             </h3>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="phone" className="label-hospital">Phone Number *</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -214,11 +226,12 @@ export function PatientForm({
                   required
                   placeholder="+1 (555) 123-4567"
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="label-hospital">Email Address *</Label>
                 <Input
                   id="email"
                   name="email"
@@ -227,49 +240,51 @@ export function PatientForm({
                   required
                   placeholder="patient@example.com"
                   disabled={loading}
+                  className="input-hospital h-11"
                 />
-                <p className="text-xs text-muted-foreground">Required for patient login</p>
+                <p className="text-[11px] text-muted">Used for patient portal authentication</p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="emergency_contact">Emergency Contact</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="emergency_contact" className="label-hospital">Emergency Contact</Label>
               <Input
                 id="emergency_contact"
                 name="emergency_contact"
                 type="tel"
                 defaultValue={patient?.PAT_EMERGENCY_CONTACT}
-                placeholder="+1 (555) 999-8888"
+                placeholder="+1 (555) 999-8888 (Name & Phone)"
                 disabled={loading}
+                className="input-hospital h-11"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="addr">Address *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="addr" className="label-hospital">Residential Address *</Label>
               <Textarea
                 id="addr"
                 name="addr"
                 defaultValue={patient?.PAT_ADDR || ''}
                 required
                 placeholder="123 Main Street, City, State, ZIP"
-                className="min-h-20"
+                className="textarea-hospital min-h-20"
                 disabled={loading}
               />
             </div>
           </div>
 
-          {/* Medical Information */}
+          {/* Section 3: Clinical & Medical Metadata */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-border pb-2 text-foreground">
-              <Stethoscope className="w-4 h-4 text-primary" />
-              Medical Information
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <Stethoscope className="w-3.5 h-3.5 text-primary" />
+              Clinical & Admission Parameters
             </h3>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="gender" className="label-hospital">Gender</Label>
                 <Select name="gender" defaultValue={patient?.PAT_GENDER || 'Male'} disabled={loading}>
-                  <SelectTrigger>
+                  <SelectTrigger className="select-hospital h-11">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,10 +295,10 @@ export function PatientForm({
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="blood_group">Blood Group</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="blood_group" className="label-hospital">Blood Group</Label>
                 <Select name="blood_group" defaultValue={patient?.PAT_BLOOD_GROUP || 'O+'} disabled={loading}>
-                  <SelectTrigger>
+                  <SelectTrigger className="select-hospital h-11">
                     <SelectValue placeholder="Select blood group" />
                   </SelectTrigger>
                   <SelectContent>
@@ -300,71 +315,76 @@ export function PatientForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Patient Type *</Label>
-                <Select name="type" defaultValue={patient?.PAT_TYPE || 'OutPatient'} required disabled={loading}>
-                  <SelectTrigger>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="type" className="label-hospital">Patient Classification *</Label>
+                <Select name="type" defaultValue={patient?.PAT_TYPE || 'InPatient'} required disabled={loading}>
+                  <SelectTrigger className="select-hospital h-11">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="InPatient">InPatient</SelectItem>
-                    <SelectItem value="OutPatient">OutPatient</SelectItem>
+                    <SelectItem value="InPatient">InPatient (Admitted to Ward)</SelectItem>
+                    <SelectItem value="OutPatient">OutPatient (Clinic Visit)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {patient && (
-                <div className="space-y-2">
-                  <Label htmlFor="discharge_status">Discharge Status</Label>
-                  <Input
-                    id="discharge_status"
-                    name="discharge_status"
-                    defaultValue={patient?.PAT_DISCHARGE_STATUS}
-                    placeholder="Admitted / Discharged"
-                    disabled={loading}
-                  />
-                </div>
-              )}
+              <div className="space-y-1.5">
+                <Label htmlFor="discharge_status" className="label-hospital">Admission / Discharge Status</Label>
+                <Select name="discharge_status" defaultValue={patient?.PAT_DISCHARGE_STATUS || 'Admitted'} disabled={loading}>
+                  <SelectTrigger className="select-hospital h-11">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Admitted">Admitted (Active Round)</SelectItem>
+                    <SelectItem value="Under Observation">Under Observation</SelectItem>
+                    <SelectItem value="Discharged">Discharged</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ailment">Ailment / Condition *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="ailment" className="label-hospital">Primary Ailment / Clinical Diagnosis *</Label>
               <Textarea
                 id="ailment"
                 name="ailment"
                 defaultValue={patient?.PAT_AILMENT}
                 required
-                placeholder="Describe the patient's condition..."
-                className="min-h-25"
+                placeholder="Detailed clinical observation, symptoms, and primary ailment..."
+                className="textarea-hospital min-h-24"
                 disabled={loading}
               />
             </div>
           </div>
 
-          <DialogFooter className="gap-2 pt-4 border-t border-border">
+          <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700/80 flex flex-row items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="btn-secondary h-11 px-5 rounded-xl cursor-pointer"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading}
-              className="btn-primary"
+              className="btn-primary h-11 px-6 rounded-xl flex items-center gap-2 shadow-lg cursor-pointer"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Saving...
                 </>
               ) : patient ? (
                 'Update Patient'
               ) : (
-                'Add Patient'
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Admit Patient
+                </>
               )}
             </Button>
           </DialogFooter>

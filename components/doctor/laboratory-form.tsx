@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { FlaskConical, User, Calendar, FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -107,7 +108,7 @@ export function LaboratoryForm({
           tests: formData.patTests,
           results: formData.patResults,
           doctorNumber: doctorNumber,
-          status: 'Pending',
+          status: formData.patResults ? 'Completed' : 'Pending',
           ...(labTest ? { id: labTest.LAB_ID } : {}),
         }),
       });
@@ -134,39 +135,89 @@ export function LaboratoryForm({
     label: `${p.PAT_FNAME} ${p.PAT_LNAME} (${p.PAT_NUMBER})`,
   }));
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border border-border">
-        <DialogHeader>
-          <DialogTitle>
-            {labTest ? 'Edit Lab Test' : 'Order Lab Test'}
-          </DialogTitle>
-          <DialogDescription>
-            {labTest
-              ? 'Update laboratory test details'
-              : 'Order a new laboratory test for your patient'}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700/80">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <FlaskConical className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-heading">
+                {labTest ? 'Edit Laboratory Requisition' : 'Order Diagnostic Lab Test'}
+              </DialogTitle>
+              <DialogDescription className="text-muted text-xs sm:text-sm mt-0.5">
+                {labTest
+                  ? 'Update laboratory order, specimens, and pathology findings'
+                  : 'Order new pathology, hematology, or diagnostic panel for your patient'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="patNumber">Patient *</Label>
-              <Combobox
-                options={patientOptions}
-                value={formData.patNumber}
-                onChange={(value) =>
-                  setFormData({ ...formData, patNumber: value })
-                }
-                placeholder="Select patient..."
-                searchPlaceholder="Search patients..."
-                emptyMessage="No patients found"
-                disabled={!!labTest}
-              />
-            </div>
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-6 pt-4">
+          {/* Section 1: Patient & Date */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <User className="w-3.5 h-3.5 text-primary" />
+              Patient & Order Schedule
+            </h3>
 
-            <div className="col-span-2">
-              <Label htmlFor="patTests">Test(s) Ordered *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="patNumber" className="label-hospital">
+                  Target Patient *
+                </Label>
+                <Combobox
+                  options={patientOptions}
+                  value={formData.patNumber}
+                  onChange={(value) =>
+                    setFormData({ ...formData, patNumber: value })
+                  }
+                  placeholder="Select patient..."
+                  searchPlaceholder="Search patients..."
+                  emptyMessage="No patients found"
+                  disabled={!!labTest}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="dateRec" className="label-hospital">
+                  Requisition Date *
+                </Label>
+                <Input
+                  id="dateRec"
+                  type="date"
+                  value={formData.dateRec}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dateRec: e.target.value })
+                  }
+                  required
+                  className="input-hospital h-11"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Tests & Findings */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              Diagnostic Test Panel & Findings
+            </h3>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="patTests" className="label-hospital">
+                Test(s) Ordered *
+              </Label>
               <Textarea
                 id="patTests"
                 value={formData.patTests}
@@ -174,54 +225,52 @@ export function LaboratoryForm({
                   setFormData({ ...formData, patTests: e.target.value })
                 }
                 required
-                placeholder="e.g., Complete Blood Count, Lipid Panel"
+                placeholder="e.g., Complete Blood Count (CBC), Comprehensive Metabolic Panel (CMP), Lipid Profile"
                 rows={3}
+                className="textarea-hospital"
               />
             </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="patResults">Test Results</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="patResults" className="label-hospital">
+                Diagnostic Results & Pathology Report
+              </Label>
               <Textarea
                 id="patResults"
                 value={formData.patResults}
                 onChange={(e) =>
                   setFormData({ ...formData, patResults: e.target.value })
                 }
-                placeholder="Enter results when available..."
+                placeholder="Enter quantitative laboratory values, reference ranges, and clinical interpretation when ready..."
                 rows={4}
-              />
-            </div>
-
-            <div className="col-span-2">
-              <Label htmlFor="dateRec">Date Recorded *</Label>
-              <Input
-                id="dateRec"
-                type="date"
-                value={formData.dateRec}
-                onChange={(e) =>
-                  setFormData({ ...formData, dateRec: e.target.value })
-                }
-                required
+                className="textarea-hospital"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="btn-primary"
-            >
-              {loading ? 'Saving...' : labTest ? 'Update' : 'Order'}
-            </Button>
+          <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-[11px] text-muted hidden sm:inline">
+              Tip: Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs border border-border font-mono">Ctrl+Enter</kbd> to save
+            </span>
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="btn-secondary h-11 px-5 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="btn-primary h-11 px-6 rounded-xl flex items-center gap-2 shadow-lg cursor-pointer"
+              >
+                <CheckCircle className="w-4 h-4" />
+                {loading ? 'Saving...' : labTest ? 'Update Test' : 'Order Lab Test'}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

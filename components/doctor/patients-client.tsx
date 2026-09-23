@@ -330,60 +330,69 @@ export default function DoctorPatientsClient() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ delay: index * 0.03 }}
+                    className="h-full"
                   >
-                    <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md">
+                    <Card className="card overflow-hidden border border-border hover:border-primary/40 transition-all shadow-md flex flex-col justify-between h-full bg-card">
                       <div className="card-accent-bar" />
-                      <CardHeader className="flex flex-row items-start justify-between pb-3">
-                        <div className="flex items-start gap-3">
-                          <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                            <User className="w-5 h-5" />
+                      <div>
+                        <CardHeader className="flex flex-row items-start justify-between pb-3 gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                              <User className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <CardTitle className="text-base sm:text-lg font-bold text-heading">
+                                {patient.PAT_FNAME} {patient.PAT_LNAME}
+                              </CardTitle>
+                              <div className="text-xs text-muted mt-1.5 flex flex-wrap items-center gap-2">
+                                <span className="table-id-link font-mono font-bold whitespace-nowrap">{patient.PAT_NUMBER}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <span className="text-heading font-semibold whitespace-nowrap">{patient.PAT_TYPE || 'OutPatient'}</span>
+                                <span className="text-muted-foreground">•</span>
+                                <StatusBadge status={patient.PAT_DISCHARGE_STATUS || 'Admitted'} showIcon />
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-lg font-bold text-heading">
-                              {patient.PAT_FNAME} {patient.PAT_LNAME}
-                            </CardTitle>
-                            <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                              <span className="table-id-link">{patient.PAT_NUMBER}</span>
-                              <span>•</span>
-                              <span className="text-foreground font-medium">{patient.PAT_TYPE || 'OutPatient'}</span>
+                          <div className="flex items-center shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEdit(patient)}
+                              className="table-action-edit hover-lift cursor-pointer h-8 w-8 shrink-0"
+                              title="Edit Patient Details"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-1 pb-3">
+                          <div className="p-3 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                            <span className="text-muted block text-[10px] uppercase font-bold tracking-wider mb-1">
+                              Primary Ailment / Diagnosis
+                            </span>
+                            <p className="text-xs text-heading font-semibold line-clamp-2">
+                              {patient.PAT_AILMENT || 'General Clinical Observation'}
                             </p>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <StatusBadge status={patient.PAT_DISCHARGE_STATUS || 'Admitted'} showIcon />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(patient)}
-                            className="table-action-edit hover-lift cursor-pointer h-8 w-8"
-                            title="Edit Patient Details"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="p-3 rounded-lg bg-card border border-border mb-3">
-                          <span className="text-muted block text-[10px] uppercase font-semibold mb-0.5">Primary Ailment / Diagnosis</span>
-                          <p className="text-xs text-heading font-medium line-clamp-2">{patient.PAT_AILMENT || 'General Clinical Observation'}</p>
-                        </div>
-                        <div className="flex items-center justify-between text-xs text-muted pt-2 border-t border-border">
-                          {patient.PAT_PHONE ? (
-                            <div className="flex items-center gap-1.5 text-foreground">
-                              <Phone className="w-3.5 h-3.5 text-primary" />
-                              <span>{patient.PAT_PHONE}</span>
-                            </div>
-                          ) : (
-                            <span>No phone on file</span>
-                          )}
-                          {patient.PAT_EMAIL && (
-                            <div className="flex items-center gap-1.5 text-muted truncate max-w-[180px]">
-                              <Mail className="w-3.5 h-3.5" />
-                              <span className="truncate">{patient.PAT_EMAIL}</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
+                        </CardContent>
+                      </div>
+                      
+                      <div className="px-6 py-3 bg-muted/20 dark:bg-muted/10 border-t border-border flex items-center justify-between text-xs text-muted">
+                        {patient.PAT_PHONE ? (
+                          <div className="flex items-center gap-1.5 text-heading font-medium">
+                            <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="truncate">{patient.PAT_PHONE}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted text-[11px]">No phone on file</span>
+                        )}
+                        {patient.PAT_EMAIL && (
+                          <div className="flex items-center gap-1.5 text-muted truncate max-w-[160px] sm:max-w-[200px]" title={patient.PAT_EMAIL}>
+                            <Mail className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{patient.PAT_EMAIL}</span>
+                          </div>
+                        )}
+                      </div>
                     </Card>
                   </motion.div>
                 ))}
