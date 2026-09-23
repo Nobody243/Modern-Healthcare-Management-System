@@ -164,8 +164,18 @@ export default function HomePage() {
   const [activeNav, setActiveNav] = useState<string>('hero');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const { scrollYProgress } = useScroll();
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop, { passive: true });
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   useEffect(() => {
     const sectionIds = ['hero', 'portals', 'architecture', 'security'];
@@ -573,10 +583,12 @@ export default function HomePage() {
                 <span>SYSTEM: OPERATIONAL</span>
               </div>
 
-              <SplineScene
-                scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-                className="w-full h-full pointer-events-auto relative z-10"
-              />
+              {isDesktop && (
+                <SplineScene
+                  scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+                  className="w-full h-full pointer-events-auto relative z-10"
+                />
+              )}
             </motion.div>
 
             {/* MOBILE & TABLET ONLY: CLEAN TELEMETRY CARD */}
