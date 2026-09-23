@@ -121,9 +121,18 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
       {/* ========================================================================= */}
       {/* 1. MOBILE & TABLET STICKY TOP NAVIGATION BAR (< lg)                      */}
       {/* ========================================================================= */}
-      <header className="lg:hidden sticky top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-40 px-4 sm:px-6 flex items-center justify-between shadow-md shrink-0">
-        {/* Brand & Active Breadcrumb */}
+      <header className="lg:hidden sticky top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-40 px-3 sm:px-6 flex items-center justify-between shadow-md shrink-0">
+        {/* Left: Menu Trigger & Brand / Breadcrumb */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground border border-border/80 transition-colors cursor-pointer shadow-sm active:scale-95 flex items-center justify-center shrink-0"
+            aria-label="Toggle navigation menu"
+          >
+            {sidebarOpen ? <X className="w-5 h-5 text-[rgb(var(--portal-primary))]" /> : <Menu className="w-5 h-5" />}
+          </button>
+
           <Link href="/doctor/dashboard" className="flex items-center gap-2.5 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[rgb(var(--portal-doctor-from))] to-[rgb(var(--portal-doctor-to))] flex items-center justify-center shadow-md text-white">
               <Stethoscope className="w-5 h-5" />
@@ -144,23 +153,14 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
           </div>
         </div>
 
-        {/* Doctor Snippet, Theme Toggle & Hamburger */}
-        <div className="flex items-center gap-2">
+        {/* Right: Doctor Snippet & Theme Toggle */}
+        <div className="flex items-center gap-2 shrink-0">
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border text-[11px] font-mono">
             <span className="w-2 h-2 rounded-full bg-kpi-success-subtle border border-border animate-pulse" />
             <span className="text-muted-foreground truncate max-w-[120px]">Dr. {user?.name || 'Physician'}</span>
           </div>
 
           <ThemeToggle />
-
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground border border-border/80 transition-colors cursor-pointer shadow-sm active:scale-95 flex items-center justify-center"
-            aria-label="Toggle navigation menu"
-          >
-            {sidebarOpen ? <X className="w-5 h-5 text-[rgb(var(--portal-primary))]" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </header>
 
