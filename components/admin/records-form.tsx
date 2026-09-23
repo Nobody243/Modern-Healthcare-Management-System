@@ -246,7 +246,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
@@ -254,15 +254,15 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
-        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white/95 dark:bg-[#131f36]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/80 px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-2xl font-bold text-heading">
             {record ? 'Edit Medical Record' : 'Add Medical Record'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -271,7 +271,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Patient *
               </label>
               <Combobox
@@ -289,7 +289,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Patient Number *
               </label>
               <input
@@ -305,7 +305,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Patient Name *
               </label>
               <input
@@ -319,7 +319,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Patient Age
               </label>
               <input
@@ -333,7 +333,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-heading mb-1.5">
+            <label className="label-hospital">
               Patient Address
             </label>
             <input
@@ -347,7 +347,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Patient Ailment
               </label>
               <input
@@ -360,7 +360,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-heading mb-1.5">
+              <label className="label-hospital">
                 Doctor
               </label>
               <Combobox
@@ -378,7 +378,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-heading mb-1.5">
+            <label className="label-hospital">
               Diagnosis
             </label>
             <textarea
@@ -391,7 +391,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-heading mb-1.5">
+            <label className="label-hospital">
               Treatment Plan
             </label>
             <textarea
@@ -404,7 +404,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-heading mb-1.5">
+            <label className="label-hospital">
               Prescription
             </label>
             <Combobox
@@ -422,7 +422,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
           </div>
 
           {selectedPrescription && (
-            <div className="bg-card p-4 rounded-xl space-y-3 border border-border shadow-sm">
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl space-y-3 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
               <h4 className="font-bold text-heading text-sm">Prescription Details</h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -451,7 +451,7 @@ export default function RecordsForm({ record, onClose, onSuccess }: Props) {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700/80">
             <button
               type="button"
               onClick={onClose}

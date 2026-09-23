@@ -48,7 +48,7 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between h-10 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20",
+            "w-full justify-between h-10 bg-white dark:bg-[#131f36] border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all focus:border-primary focus:ring-2 focus:ring-primary/20",
             !value && "text-slate-400 dark:text-slate-500",
             className
           )}
@@ -60,8 +60,8 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70 text-slate-500 dark:text-slate-400" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xl rounded-lg" align="start">
-        <Command className="bg-white dark:bg-slate-900" shouldFilter={false}>
+      <PopoverContent className="w-full p-0 bg-white dark:bg-[#131f36] border-slate-200 dark:border-slate-700/80 shadow-2xl rounded-lg" align="start">
+        <Command className="bg-white dark:bg-[#131f36]" shouldFilter={false}>
           <CommandInput 
             placeholder={searchPlaceholder} 
             className="h-10 text-slate-900 dark:text-slate-100 font-medium"
