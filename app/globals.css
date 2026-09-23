@@ -1464,6 +1464,8 @@
     background-color: rgba(var(--brand-solid), 0.14);
     color: rgb(var(--brand-solid));
     border: 1px solid rgba(var(--brand-solid), 0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .hover-lift {

@@ -165,20 +165,21 @@ export default function DoctorPatientsClient() {
     <>
       <div className="space-y-6">
         {/* Executive Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            className="space-y-1"
           >
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-heading">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
                 My Assigned Patients
               </h1>
               <span className="badge-counter">
                 {patients.length} Active Cases
               </span>
             </div>
-            <p className="text-muted mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {doctor ? `Under Primary Care of Dr. ${doctor.DOC_FNAME} ${doctor.DOC_LNAME}` : 'Patient caseload management and clinical rounds'}
             </p>
           </motion.div>

@@ -51,21 +51,22 @@ export default function PatientRecordsClient({ records }: RecordsClientProps) {
   return (
     <div className="space-y-6">
       {/* Executive Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
+          className="space-y-1"
         >
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-heading">
-              My Medical Records & Chart History
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
+              My Medical Records & Charts
             </h1>
             <span className="badge-counter">
               {records.length} Case Files
             </span>
           </div>
-          <p className="text-muted mt-1">
-            Official longitudinal clinical case charts, physician diagnostic summaries, and personalized care regimens
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Longitudinal clinical charts, physician diagnoses, and treatment histories
           </p>
         </motion.div>
       </div>

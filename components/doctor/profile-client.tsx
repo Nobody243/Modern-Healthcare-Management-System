@@ -121,8 +121,8 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
               <User className="w-8 h-8" />
             </div>
             <div>
-              <CardTitle className="text-3xl font-bold text-heading">Profile Settings</CardTitle>
-              <p className="text-muted mt-1">Manage your personal information and clinical account settings</p>
+              <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">Profile Settings</CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage personal information and clinical account settings</p>
             </div>
           </div>
         </CardHeader>

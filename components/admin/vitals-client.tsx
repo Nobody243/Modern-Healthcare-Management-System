@@ -117,21 +117,22 @@ export default function VitalsClient() {
     <>
       <div className="space-y-6">
         {/* Executive Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            className="space-y-1"
           >
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-heading">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
                 Patient Vital Signs
               </h1>
               <span className="badge-counter">
                 {vitals.length} Logs
               </span>
             </div>
-            <p className="text-muted mt-1">
-              Physiological metrics, blood pressure readings, pulse, respiratory rate, and oxygen saturation
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Physiological telemetry, blood pressure, pulse, and oxygen saturation
             </p>
           </motion.div>
           <motion.div

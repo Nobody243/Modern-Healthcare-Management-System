@@ -129,21 +129,22 @@ export default function DoctorPatientTransfersClient() {
     <>
       <div className="space-y-6">
         {/* Executive Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            className="space-y-1"
           >
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-heading">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
                 Patient Transfers & Relocations
               </h1>
               <span className="badge-counter">
                 {transfers.length} Transfers
               </span>
             </div>
-            <p className="text-muted mt-1">
-              Authorize ward changes, intensive care escalations, and cross-departmental patient handoffs
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Authorize ward changes, ICU escalations, and cross-department handoffs
             </p>
           </motion.div>
           <motion.div

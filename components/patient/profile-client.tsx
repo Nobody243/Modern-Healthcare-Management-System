@@ -140,10 +140,10 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
                 <User className="w-7 h-7" />
               </div>
               <div>
-                <CardTitle className="text-3xl font-bold tracking-tight">
+                <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
                   My Profile
                 </CardTitle>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Manage your personal information and security
                 </p>
               </div>
@@ -157,7 +157,7 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
         <div className="card-accent-bar" />
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 text-heading">
               <User className="w-6 h-6 text-primary" />
               Personal Information
             </CardTitle>
