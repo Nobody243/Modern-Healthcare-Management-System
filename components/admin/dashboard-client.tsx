@@ -266,8 +266,6 @@ export default function AdminDashboardClient({ stats, userName }: AdminDashboard
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Alerts & Notifications */}
         <div className="bg-card rounded-2xl border border-border/80 p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
-          <div className="card-accent-bar" />
-          
           <div>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -370,8 +368,6 @@ export default function AdminDashboardClient({ stats, userName }: AdminDashboard
 
         {/* Recent Activity */}
         <div className="bg-card rounded-2xl border border-border/80 p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
-          <div className="card-accent-bar" />
-
           <div>
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
