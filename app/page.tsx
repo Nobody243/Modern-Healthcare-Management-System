@@ -24,6 +24,7 @@ import {
   Crosshair,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SplineScene } from '@/components/ui/spline';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 // ============================================================================
