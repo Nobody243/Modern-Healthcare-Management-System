@@ -121,7 +121,7 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
       {/* ========================================================================= */}
       {/* 1. MOBILE & TABLET STICKY TOP NAVIGATION BAR (< lg)                      */}
       {/* ========================================================================= */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-40 px-4 sm:px-6 flex items-center justify-between shadow-md">
+      <header className="lg:hidden sticky top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-40 px-4 sm:px-6 flex items-center justify-between shadow-md shrink-0">
         {/* Brand & Active Breadcrumb */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <Link href="/doctor/dashboard" className="flex items-center gap-2.5 shrink-0">
@@ -363,7 +363,7 @@ export default function DoctorLayout({ children, user }: DoctorLayoutProps) {
       {/* ========================================================================= */}
       <main
         className={cn(
-          "flex-1 w-full pt-20 lg:pt-8 p-4 sm:p-6 lg:p-8 animate-fade-in transition-all duration-300 ease-in-out",
+          "flex-1 w-full p-4 sm:p-6 lg:p-8 animate-fade-in transition-all duration-300 ease-in-out",
           isCollapsed
             ? "lg:ml-20 lg:w-[calc(100%-5rem)]"
             : "lg:ml-64 lg:w-[calc(100%-16rem)]"
