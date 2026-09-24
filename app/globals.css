@@ -1933,4 +1933,46 @@
   .overflow-x-auto::-webkit-scrollbar-thumb:hover {
     background: rgb(var(--border-strong));
   }
+
+  /* ========================================================================= */
+  /* DESKTOP AMBIENT CURSOR BLOB MORPHING ANIMATIONS                           */
+  /* ========================================================================= */
+  @keyframes blobMorph {
+    0%, 100% {
+      border-radius: 62% 38% 52% 48% / 48% 58% 42% 52%;
+      transform: rotate(0deg);
+    }
+    33% {
+      border-radius: 45% 55% 38% 62% / 58% 42% 58% 42%;
+      transform: rotate(120deg);
+    }
+    66% {
+      border-radius: 54% 46% 64% 36% / 42% 64% 36% 58%;
+      transform: rotate(240deg);
+    }
+  }
+
+  .animate-blob-morph {
+    animation: blobMorph 18s ease-in-out infinite alternate;
+  }
+
+  /* ========================================================================= */
+  /* ORIGINAL 21ST.DEV / ACETERNITY SPOTLIGHT BEAM KEYFRAMES                   */
+  /* ========================================================================= */
+  @keyframes spotlight {
+    0% {
+      opacity: 0;
+      transform: translate(-72%, -62%) scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%, -40%) scale(1);
+    }
+  }
+
+  .animate-spotlight {
+    animation: spotlight 2s ease 0.5s 1 forwards;
+  }
 }
+
+

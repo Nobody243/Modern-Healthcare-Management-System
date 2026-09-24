@@ -29,59 +29,102 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SplineScene } from '@/components/ui/spline';
+import { Spotlight } from '@/components/ui/spotlight';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 // ============================================================================
-// ZERO-RERENDER DYNAMIC CURSOR GLOW (DESKTOP / FINE-POINTER ONLY)
+// ORIGINAL DYNAMIC CURSOR BLOB (DESKTOP / FINE-POINTER ONLY)
 // ============================================================================
 function CursorGlow() {
-  const [isFinePointer, setIsFinePointer] = useState(false);
+  const [isDesktopFinePointer, setIsDesktopFinePointer] = useState(false);
+
+  // Position & scale motion values for zero-rerender 60-120fps smooth tracking
   const cursorX = useMotionValue(-500);
   const cursorY = useMotionValue(-500);
   const opacity = useMotionValue(0);
+  const blobScale = useMotionValue(1);
 
-  const springConfig = { damping: 24, stiffness: 320, mass: 0.1 };
+  // Smooth fluid spring physics for natural liquid movement
+  const springConfig = { damping: 28, stiffness: 220, mass: 0.15 };
   const smoothX = useSpring(cursorX, springConfig);
   const smoothY = useSpring(cursorY, springConfig);
+  const smoothScale = useSpring(blobScale, { damping: 22, stiffness: 300 });
 
   useEffect(() => {
-    // Strictly verify fine pointer (mouse) and hover support (desktop only)
+    // Strictly verify desktop viewport + fine pointer (mouse/trackpad with hover capability)
     const media = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
-    setIsFinePointer(media.matches);
+    setIsDesktopFinePointer(media.matches);
 
     const handleMediaChange = (e: MediaQueryListEvent) => {
-      setIsFinePointer(e.matches);
+      setIsDesktopFinePointer(e.matches);
     };
 
     media.addEventListener('change', handleMediaChange);
 
     if (!media.matches) return () => media.removeEventListener('change', handleMediaChange);
 
+    let isHoveringInteractive = false;
+
     const handleMouseMove = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
       opacity.set(1);
+
+      // Check if hovering over clickable or interactive UI elements
+      const target = e.target as HTMLElement | null;
+      const interactiveEl = target?.closest(
+        'button, a, input, select, textarea, [role="button"], .card-accent-bar, .group, [data-interactive="true"]'
+      );
+
+      if (interactiveEl && !isHoveringInteractive) {
+        isHoveringInteractive = true;
+        blobScale.set(1.3);
+      } else if (!interactiveEl && isHoveringInteractive) {
+        isHoveringInteractive = false;
+        blobScale.set(1);
+      }
+    };
+
+    const handleMouseDown = () => {
+      blobScale.set(0.9);
+    };
+
+    const handleMouseUp = () => {
+      blobScale.set(isHoveringInteractive ? 1.3 : 1);
     };
 
     const handleMouseLeave = () => {
       opacity.set(0);
     };
 
+    const handleMouseEnter = () => {
+      opacity.set(1);
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
 
     return () => {
       media.removeEventListener('change', handleMediaChange);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [cursorX, cursorY, opacity]);
+  }, [cursorX, cursorY, opacity, blobScale]);
 
-  if (!isFinePointer) return null;
+  if (!isDesktopFinePointer) return null;
 
   return (
-    <div className="hidden lg:block pointer-events-none select-none">
-      {/* Primary Luminous Ambient Beam Follower */}
+    <div
+      className="hidden lg:block pointer-events-none select-none fixed inset-0 z-30 overflow-hidden"
+      aria-hidden="true"
+    >
+      {/* Primary Fluid Ambient Glow Blob */}
       <motion.div
         style={{
           x: smoothX,
@@ -89,12 +132,14 @@ function CursorGlow() {
           translateX: '-50%',
           translateY: '-50%',
           opacity,
+          scale: smoothScale,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, rgba(59, 130, 246, 0.04) 45%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, rgba(59, 130, 246, 0.05) 45%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 z-30 w-[400px] h-[400px] rounded-full blur-2xl transform-gpu will-change-transform"
+        className="fixed top-0 left-0 w-[420px] h-[420px] rounded-full blur-3xl transform-gpu will-change-transform"
       />
-      {/* Magnetic Core Micro Beacon */}
+
+      {/* Focused Radiant Core Energy Blob */}
       <motion.div
         style={{
           x: smoothX,
@@ -102,17 +147,18 @@ function CursorGlow() {
           translateX: '-50%',
           translateY: '-50%',
           opacity,
+          scale: smoothScale,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.32) 0%, rgba(34, 211, 238, 0.06) 40%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.30) 0%, rgba(13, 148, 136, 0.10) 40%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 z-30 w-[120px] h-[120px] rounded-full blur-lg transform-gpu will-change-transform"
+        className="fixed top-0 left-0 w-[140px] h-[140px] rounded-full blur-xl transform-gpu will-change-transform"
       />
     </div>
   );
 }
 
 // ============================================================================
-// HIGH-VISIBILITY RESPONSIVE CARD
+// HIGH-VISIBILITY RESPONSIVE CARD WITH DESKTOP SPOTLIGHT
 // ============================================================================
 function SpotlightCard({
   children,
@@ -126,7 +172,7 @@ function SpotlightCard({
 
   useEffect(() => {
     // Only enable mouse hover listener on desktop devices with hover support
-    setCanHover(window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+    setCanHover(window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches);
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -148,7 +194,7 @@ function SpotlightCard({
           className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform-gpu hidden lg:block"
           style={{
             background:
-              'radial-gradient(320px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.14), transparent 70%)',
+              'radial-gradient(360px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.16), transparent 70%)',
           }}
         />
       )}
@@ -522,9 +568,15 @@ export default function HomePage() {
           {/* ======================================================================= */}
           {/* DESKTOP HERO VIEW (LG & UP - UNCHANGED)                                 */}
           {/* ======================================================================= */}
-          <div className="hidden lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center w-full">
+          <div className="hidden lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center w-full relative">
+            {/* Original 21st.dev / Aceternity Hero Spotlight Beam */}
+            <Spotlight
+              className="-top-40 left-0 md:left-60 md:-top-20"
+              fill="#22d3ee"
+            />
+
             {/* LEFT SIDE (50%): HEADLINE & ACTIONS */}
-            <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left relative z-10">
               {/* Live Status Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
