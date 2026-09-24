@@ -189,10 +189,10 @@ export function PrescriptionForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl">
-        <DialogHeader className="pb-4 border-b border-slate-200 dark:border-slate-700/80">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border border-border p-6 sm:p-8 rounded-2xl shadow-2xl">
+        <DialogHeader className="pb-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/60 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400">
               <Pill className="w-5 h-5" />
             </div>
             <div>
@@ -211,7 +211,7 @@ export function PrescriptionForm({
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {/* Section 1: Patient & Medication Selection */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2 border-b border-border pb-2">
               <User className="w-3.5 h-3.5 text-primary" />
               Patient & Medication Selection
             </h3>
@@ -257,7 +257,7 @@ export function PrescriptionForm({
 
           {/* Section 2: Dosage & Schedule */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2 border-b border-border pb-2">
               <Calendar className="w-3.5 h-3.5 text-primary" />
               Dosage & Administration Regimen
             </h3>
@@ -354,7 +354,7 @@ export function PrescriptionForm({
 
           {/* Section 3: Clinical Instructions & Notes */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-2 border-b border-border pb-2">
               <FileText className="w-3.5 h-3.5 text-primary" />
               Special Patient Instructions / Notes
             </h3>
@@ -376,7 +376,7 @@ export function PrescriptionForm({
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-slate-200 dark:border-slate-700/80 flex flex-row items-center justify-end gap-3">
+          <DialogFooter className="pt-6 border-t border-border flex flex-row items-center justify-end gap-3">
             <Button
               type="button"
               variant="outline"

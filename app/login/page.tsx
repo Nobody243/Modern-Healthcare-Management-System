@@ -83,12 +83,12 @@ const roleConfig = {
 
 const demoAccounts = [
   {
-    role: 'admin' as const,
-    label: 'Admin Demo',
-    badge: 'Operations',
-    email: 'demo.admin@curewell.com',
+    role: 'patient' as const,
+    label: 'Patient Demo',
+    badge: 'Portal',
+    email: 'demo.patient@curewell.com',
     password: 'demo123',
-    color: 'kpi-icon-primary',
+    color: 'kpi-icon-info',
   },
   {
     role: 'doctor' as const,
@@ -99,12 +99,12 @@ const demoAccounts = [
     color: 'kpi-icon-success',
   },
   {
-    role: 'patient' as const,
-    label: 'Patient Demo',
-    badge: 'Portal',
-    email: 'demo.patient@curewell.com',
+    role: 'admin' as const,
+    label: 'Admin Demo',
+    badge: 'Operations',
+    email: 'demo.admin@curewell.com',
     password: 'demo123',
-    color: 'kpi-icon-info',
+    color: 'kpi-icon-primary',
   },
 ];
 

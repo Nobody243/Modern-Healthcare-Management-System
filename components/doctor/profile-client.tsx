@@ -167,26 +167,26 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
       <Card className="card overflow-hidden border border-border shadow-xl rounded-2xl relative">
         <div className="card-accent-bar" />
         
-        <CardHeader className="p-6 sm:p-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+        <CardHeader className="p-5 sm:p-7 md:p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
               {/* Avatar Box with Doctor Theme Tokens */}
-              <div className="relative">
-                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl kpi-icon-doctor flex items-center justify-center font-extrabold text-xl sm:text-2xl shadow-lg ring-4 ring-primary/20 tracking-wider">
+              <div className="relative shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl kpi-icon-doctor flex items-center justify-center font-bold text-lg sm:text-xl md:text-2xl shadow-lg ring-4 ring-primary/20 tracking-wider">
                   {userInitials}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center text-white" title="Active Clinical Staff">
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center text-white" title="Active Clinical Staff">
+                  <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                 </div>
               </div>
 
               {/* Name and Meta Badges */}
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-heading tracking-tight">
+              <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
                     Dr. {fname} {lname}
                   </h1>
-                  <span className="badge badge-doctor px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                  <span className="badge badge-doctor px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
                     Physician Portal
                   </span>
                 </div>
@@ -195,7 +195,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                   <button
                     onClick={handleCopyId}
                     type="button"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 hover:bg-muted text-heading font-mono font-semibold transition-colors cursor-pointer border border-border"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 hover:bg-muted text-heading font-mono font-semibold transition-colors cursor-pointer border border-border text-xs sm:text-sm"
                     title="Click to copy Doctor ID"
                   >
                     <Fingerprint className="w-3.5 h-3.5 text-primary" />
@@ -207,12 +207,12 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                     )}
                   </button>
 
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg badge-theme-info font-medium border">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg badge-theme-info font-medium border text-xs sm:text-sm">
                     <Sparkles className="w-3.5 h-3.5" />
                     {specialization || initialDoctor.DOC_SPECIALIZATION || 'General Practitioner'}
                   </span>
 
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 text-muted font-medium border border-border">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 text-muted font-medium border border-border text-xs sm:text-sm">
                     <Calendar className="w-3.5 h-3.5 opacity-70" />
                     {formattedJoinDate}
                   </span>
@@ -234,7 +234,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                 }
               }}
               variant="outline"
-              className="w-full sm:w-auto h-11 px-5 rounded-xl border border-border bg-card hover:bg-muted text-heading font-semibold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto h-10 sm:h-11 px-4 sm:px-5 rounded-xl border border-border bg-card hover:bg-muted text-heading font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {isEditing ? (
                 <>
@@ -259,7 +259,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`p-4 rounded-xl border flex items-center gap-3 shadow-md ${
+            className={`p-3.5 sm:p-4 rounded-xl border flex items-center gap-3 shadow-md ${
               message.type === 'success' ? 'badge-theme-success' : 'badge-theme-danger'
             }`}
           >
@@ -268,27 +268,27 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
             ) : (
               <AlertCircle className="w-5 h-5 shrink-0" />
             )}
-            <span className="font-semibold text-sm">{message.text}</span>
+            <span className="font-semibold text-xs sm:text-sm">{message.text}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Main 2-Column Responsive Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
         
         {/* Left Column (7 cols): Personal Info & Professional Profile */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-5 sm:space-y-6">
           
           {/* Card 1: Personal & Contact Information */}
           <Card className="card overflow-hidden border border-border shadow-xl rounded-2xl relative">
             <div className="card-accent-bar" />
-            <CardHeader className="border-b border-border pb-5">
+            <CardHeader className="border-b border-border pb-4 sm:pb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl kpi-icon-doctor flex items-center justify-center shadow-md">
-                  <User className="w-5 h-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl kpi-icon-doctor flex items-center justify-center shadow-md shrink-0">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-heading">
+                  <CardTitle className="text-base sm:text-lg font-bold text-heading">
                     Personal Information
                   </CardTitle>
                   <CardDescription className="text-muted text-xs sm:text-sm">
@@ -298,7 +298,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
               </div>
             </CardHeader>
 
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 sm:pt-6">
               {isEditing ? (
                 <form onSubmit={handleProfileSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -312,7 +312,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                         value={fname}
                         onChange={(e) => setFname(e.target.value)}
                         placeholder="Enter first name"
-                        className="input-hospital h-11"
+                        className="input-hospital h-10 sm:h-11 text-sm"
                         required
                       />
                     </div>
@@ -327,7 +327,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                         value={lname}
                         onChange={(e) => setLname(e.target.value)}
                         placeholder="Enter last name"
-                        className="input-hospital h-11"
+                        className="input-hospital h-10 sm:h-11 text-sm"
                         required
                       />
                     </div>
@@ -344,7 +344,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="doctor@hospital.com"
-                        className="input-hospital h-11"
+                        className="input-hospital h-10 sm:h-11 text-sm"
                         required
                       />
                     </div>
@@ -359,7 +359,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+1 (555) 000-0000"
-                        className="input-hospital h-11"
+                        className="input-hospital h-10 sm:h-11 text-sm"
                       />
                     </div>
                   </div>
@@ -374,7 +374,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                       value={specialization}
                       onChange={(e) => setSpecialization(e.target.value)}
                       placeholder="e.g. Cardiology, Pediatrics, Neurology"
-                      className="input-hospital h-11"
+                      className="input-hospital h-10 sm:h-11 text-sm"
                       required
                     />
                   </div>
@@ -384,14 +384,14 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                       type="button"
                       variant="outline"
                       onClick={() => setIsEditing(false)}
-                      className="btn-secondary h-11 px-5 rounded-xl"
+                      className="btn-secondary h-10 sm:h-11 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-semibold"
                     >
                       Cancel
                     </Button>
                     <Button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary h-11 px-6 rounded-xl flex items-center gap-2 shadow-lg"
+                      className="btn-primary h-10 sm:h-11 px-5 sm:px-6 rounded-xl flex items-center gap-2 shadow-lg text-xs sm:text-sm font-semibold"
                     >
                       <Save className="w-4 h-4" />
                       {loading ? 'Saving Changes...' : 'Save Profile Changes'}
@@ -399,43 +399,43 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                   </div>
                 </form>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                       <User className="w-3.5 h-3.5 text-primary" />
                       Physician Name
                     </span>
-                    <p className="text-base font-bold text-heading">
+                    <p className="text-sm sm:text-base font-semibold text-heading">
                       Dr. {fname} {lname}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                       <Mail className="w-3.5 h-3.5 text-primary" />
                       Email Address
                     </span>
-                    <p className="text-base font-bold text-heading truncate">
+                    <p className="text-sm sm:text-base font-semibold text-heading truncate">
                       {email || 'Not provided'}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                       <Phone className="w-3.5 h-3.5 text-primary" />
                       Phone Number
                     </span>
-                    <p className="text-base font-bold text-heading">
+                    <p className="text-sm sm:text-base font-semibold text-heading">
                       {phone || 'Not provided'}
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border hover:border-primary/40 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                       <Stethoscope className="w-3.5 h-3.5 text-primary" />
                       Specialization
                     </span>
-                    <p className="text-base font-bold text-heading">
+                    <p className="text-sm sm:text-base font-semibold text-heading">
                       {specialization || 'General Practitioner'}
                     </p>
                   </div>
@@ -447,13 +447,13 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
           {/* Card 2: Professional Details & Clinical Overview */}
           <Card className="card overflow-hidden border border-border shadow-xl rounded-2xl relative">
             <div className="card-accent-bar" />
-            <CardHeader className="border-b border-border pb-5">
+            <CardHeader className="border-b border-border pb-4 sm:pb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl kpi-icon-primary flex items-center justify-center shadow-md">
-                  <Award className="w-5 h-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl kpi-icon-primary flex items-center justify-center shadow-md shrink-0">
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-heading">
+                  <CardTitle className="text-base sm:text-lg font-bold text-heading">
                     Professional & Clinical Details
                   </CardTitle>
                   <CardDescription className="text-muted text-xs sm:text-sm">
@@ -463,44 +463,44 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
               </div>
             </CardHeader>
 
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+            <CardContent className="pt-5 sm:pt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="p-3 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                     <Stethoscope className="w-3.5 h-3.5 text-primary" />
                     Specialty
                   </span>
-                  <p className="text-base font-extrabold text-heading truncate">
+                  <p className="text-sm sm:text-base font-bold text-heading truncate">
                     {specialization || 'General'}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                <div className="p-3 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                     <Fingerprint className="w-3.5 h-3.5 text-primary" />
                     License #
                   </span>
-                  <p className="text-base font-extrabold font-mono text-heading">
+                  <p className="text-sm sm:text-base font-bold font-mono text-heading truncate">
                     {initialDoctor.DOC_NUMBER}
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                <div className="p-3 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                     <Building2 className="w-3.5 h-3.5 text-primary" />
                     Department
                   </span>
-                  <p className="text-base font-extrabold text-heading">
+                  <p className="text-sm sm:text-base font-bold text-heading truncate">
                     Clinical
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
+                <div className="p-3 sm:p-4 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5 mb-1">
                     <Shield className="w-3.5 h-3.5 text-primary" />
                     Status
                   </span>
-                  <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+                  <p className="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 truncate">
                     Active
                   </p>
                 </div>
@@ -510,18 +510,18 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
         </div>
 
         {/* Right Column (5 cols): Password Security & Account Details */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-5 sm:space-y-6">
           
           {/* Card 3: Password & Security */}
           <Card className="card overflow-hidden border border-border shadow-xl rounded-2xl relative">
             <div className="card-accent-bar" />
-            <CardHeader className="border-b border-border pb-5">
+            <CardHeader className="border-b border-border pb-4 sm:pb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl kpi-icon-warning flex items-center justify-center shadow-md">
-                  <Lock className="w-5 h-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl kpi-icon-warning flex items-center justify-center shadow-md shrink-0">
+                  <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-heading">
+                  <CardTitle className="text-base sm:text-lg font-bold text-heading">
                     Password & Security
                   </CardTitle>
                   <CardDescription className="text-muted text-xs sm:text-sm">
@@ -531,7 +531,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
               </div>
             </CardHeader>
 
-            <CardContent className="pt-6">
+            <CardContent className="pt-5 sm:pt-6">
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="currentPassword" className="label-hospital">
@@ -544,7 +544,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter existing password"
-                      className="input-hospital h-11 pr-11"
+                      className="input-hospital h-10 sm:h-11 pr-11 text-sm"
                       required
                     />
                     <button
@@ -568,7 +568,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Minimum 6 characters"
-                      className="input-hospital h-11 pr-11"
+                      className="input-hospital h-10 sm:h-11 pr-11 text-sm"
                       required
                       minLength={6}
                     />
@@ -593,7 +593,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter new password"
-                      className="input-hospital h-11 pr-11"
+                      className="input-hospital h-10 sm:h-11 pr-11 text-sm"
                       required
                       minLength={6}
                     />
@@ -618,7 +618,7 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
                 <Button
                   type="submit"
                   disabled={passwordLoading}
-                  className="w-full btn-primary h-11 rounded-xl shadow-lg font-semibold flex items-center justify-center gap-2 mt-2"
+                  className="w-full btn-primary h-10 sm:h-11 rounded-xl shadow-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 mt-2"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   {passwordLoading ? 'Updating Password...' : 'Change Password'}
@@ -630,13 +630,13 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
           {/* Card 4: Account Summary & Status */}
           <Card className="card overflow-hidden border border-border shadow-xl rounded-2xl relative">
             <div className="card-accent-bar" />
-            <CardHeader className="border-b border-border pb-5">
+            <CardHeader className="border-b border-border pb-4 sm:pb-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl kpi-icon-success flex items-center justify-center shadow-md">
-                  <ShieldCheck className="w-5 h-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl kpi-icon-success flex items-center justify-center shadow-md shrink-0">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg font-bold text-heading">
+                  <CardTitle className="text-base sm:text-lg font-bold text-heading">
                     Account Overview
                   </CardTitle>
                   <CardDescription className="text-muted text-xs sm:text-sm">
@@ -646,31 +646,31 @@ export default function DoctorProfileClient({ initialDoctor }: DoctorProfileClie
               </div>
             </CardHeader>
 
-            <CardContent className="pt-6 space-y-3.5">
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted">
+            <CardContent className="pt-5 sm:pt-6 space-y-3">
+              <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                <span className="text-xs sm:text-sm font-medium text-muted">
                   Doctor ID Code
                 </span>
-                <span className="font-mono font-bold table-id-link text-sm">
+                <span className="font-mono font-bold table-id-link text-xs sm:text-sm">
                   {initialDoctor.DOC_NUMBER}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted">
+              <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                <span className="text-xs sm:text-sm font-medium text-muted">
                   Staff Status
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Active Practitioner
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted">
+              <div className="flex items-center justify-between p-3 sm:p-3.5 rounded-xl bg-muted/40 dark:bg-muted/20 border border-border">
+                <span className="text-xs sm:text-sm font-medium text-muted">
                   Account Created
                 </span>
-                <span className="text-xs font-bold text-heading">
+                <span className="text-xs sm:text-sm font-semibold text-heading">
                   {formattedJoinDate}
                 </span>
               </div>

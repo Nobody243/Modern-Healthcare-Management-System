@@ -109,13 +109,13 @@ export function PatientTransferForm({ transfer, onClose, onSuccess, doctorName }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#131f36] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="sticky top-0 bg-white/95 dark:bg-[#131f36]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700/80 px-6 py-4 flex items-center justify-between z-10">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+      <div className="bg-card text-card-foreground border border-border rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="sticky top-0 bg-card/95 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-heading">
             {transfer ? 'Edit Patient Transfer' : 'New Patient Transfer'}
           </h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+          <button onClick={onClose} className="text-muted hover:text-foreground transition-colors cursor-pointer p-1 rounded-lg hover:bg-muted">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -203,7 +203,7 @@ export function PatientTransferForm({ transfer, onClose, onSuccess, doctorName }
             />
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700/80">
+          <div className="flex gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               onClick={onClose}
