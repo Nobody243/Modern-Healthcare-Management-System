@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { Users, Loader2, Plus, Edit, Search, Phone, Mail, UserCheck, Hospital, Activity, User, Download, ArrowUpDown } from 'lucide-react';
+import { Users, Loader2, Plus, Edit, Search, Phone, Mail, UserCheck, Hospital, Activity, User, Download, ArrowUpDown, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
 import { PatientForm } from './patient-form';
 import { toast } from 'sonner';
 import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 import { exportToCSV } from '@/lib/export-csv';
 import { TablePagination } from '@/components/ui/table-pagination';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface Patient {
   PAT_ID: number;
@@ -41,10 +42,12 @@ export default function DoctorPatientsClient() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'INPATIENT' | 'OUTPATIENT'>('ALL');
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [confirmExportOpen, setConfirmExportOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | undefined>();
-  const [sortField, setSortField] = useState<'name' | 'number' | 'type' | 'status'>('number');
+  const [sortField, setSortField] = useState<'name' | 'number' | 'type' | 'status'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(8);
@@ -93,11 +96,17 @@ export default function DoctorPatientsClient() {
   };
 
   const sortedAndFilteredPatients = useMemo(() => {
-    const list = patients.filter((patient) =>
+    let list = patients.filter((patient) =>
       `${patient.PAT_FNAME || ''} ${patient.PAT_LNAME || ''} ${patient.PAT_NUMBER || ''} ${patient.PAT_PHONE || ''} ${patient.PAT_AILMENT || ''} ${patient.PAT_TYPE || ''}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
     );
+
+    if (typeFilter === 'INPATIENT') {
+      list = list.filter((p) => p.PAT_TYPE?.toLowerCase().includes('inpatient') || p.PAT_TYPE?.toLowerCase().includes('in-patient'));
+    } else if (typeFilter === 'OUTPATIENT') {
+      list = list.filter((p) => p.PAT_TYPE?.toLowerCase().includes('outpatient') || p.PAT_TYPE?.toLowerCase().includes('out-patient'));
+    }
 
     return list.sort((a, b) => {
       let aVal = '';
@@ -120,7 +129,7 @@ export default function DoctorPatientsClient() {
       const cmp = aVal.localeCompare(bVal);
       return sortDirection === 'asc' ? cmp : -cmp;
     });
-  }, [patients, searchTerm, sortField, sortDirection]);
+  }, [patients, searchTerm, sortField, sortDirection, typeFilter]);
 
   const paginatedPatients = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -128,6 +137,14 @@ export default function DoctorPatientsClient() {
   }, [sortedAndFilteredPatients, currentPage, pageSize]);
 
   const handleExportCSV = () => {
+    if (sortedAndFilteredPatients.length === 0) {
+      toast.error('No patient records available to export');
+      return;
+    }
+    setConfirmExportOpen(true);
+  };
+
+  const executeExportCSV = () => {
     exportToCSV(
       `Assigned_Patients_${doctor?.DOC_NUMBER || 'Doctor'}_${new Date().toISOString().split('T')[0]}`,
       sortedAndFilteredPatients,
@@ -142,6 +159,7 @@ export default function DoctorPatientsClient() {
         { header: 'Discharge Status', accessor: 'PAT_DISCHARGE_STATUS' },
       ]
     );
+    setConfirmExportOpen(false);
     toast.success(`Exported ${sortedAndFilteredPatients.length} patient records to CSV`);
   };
 
@@ -169,7 +187,7 @@ export default function DoctorPatientsClient() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="space-y-1"
+            className="space-y-1 w-full sm:w-auto"
           >
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-heading tracking-tight">
@@ -186,12 +204,12 @@ export default function DoctorPatientsClient() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2.5 flex-wrap"
+            className="flex items-center gap-2.5 w-full sm:w-auto"
           >
             <Button
               onClick={handleExportCSV}
               variant="outline"
-              className="border-border text-foreground hover:bg-muted/80 flex items-center gap-2 cursor-pointer"
+              className="border-border text-foreground hover:bg-muted/80 flex-1 sm:flex-initial flex items-center justify-center gap-2 cursor-pointer h-10 px-4"
               title="Download CSV"
             >
               <Download className="w-4 h-4" />
@@ -199,7 +217,7 @@ export default function DoctorPatientsClient() {
             </Button>
             <Button
               onClick={handleAddNew}
-              className="btn-primary flex items-center gap-2 cursor-pointer"
+              className="btn-primary flex-1 sm:flex-initial flex items-center justify-center gap-2 cursor-pointer h-10 px-4"
             >
               <Plus className="w-4 h-4" />
               <span>Admit Patient</span>
@@ -264,41 +282,102 @@ export default function DoctorPatientsClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="card-glass p-4 border border-border shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <Input
-                placeholder="Search assigned patients by name, patient number, phone, or diagnosis..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-hospital pl-10 h-11"
-              />
+          <Card className="card-glass p-3.5 sm:p-4 border border-border shadow-md space-y-3">
+            {/* Top Row: Search Input + Sort Controls */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <Input
+                  placeholder="Search assigned patients by name, ID, phone, or diagnosis..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="input-hospital pl-10 pr-9 h-11 text-sm bg-card/60"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground p-1 rounded-md transition-colors cursor-pointer"
+                    title="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Sort Selector & Direction Toggle */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div className="relative flex items-center">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-muted absolute left-2.5 pointer-events-none" />
+                  <select
+                    aria-label="Sort Field"
+                    value={sortField}
+                    onChange={(e) => {
+                      setSortField(e.target.value as any);
+                      setCurrentPage(1);
+                    }}
+                    className="h-11 pl-8 pr-7 rounded-xl border border-border bg-card hover:bg-muted/50 text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shadow-sm appearance-none transition-all"
+                  >
+                    <option value="name">Name</option>
+                    <option value="number">ID No</option>
+                    <option value="type">Type</option>
+                    <option value="status">Status</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted absolute right-2 pointer-events-none" />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-xl border-border bg-card hover:bg-muted/80 shrink-0"
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  title={`Sort ${sortDirection === 'asc' ? 'Descending' : 'Ascending'}`}
+                >
+                  <ArrowUpDown className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
-              <span className="text-xs text-muted font-semibold hidden md:inline">Sort:</span>
-              <select
-                aria-label="Sort Field"
-                value={sortField}
-                onChange={(e) => {
-                  setSortField(e.target.value as any);
-                  setCurrentPage(1);
-                }}
-                className="h-10 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
-              >
-                <option value="number">Patient Number</option>
-                <option value="name">Patient Name</option>
-                <option value="type">Patient Type</option>
-                <option value="status">Status</option>
-              </select>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 border-border"
-                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-                title={`Sort ${sortDirection === 'asc' ? 'Descending' : 'Ascending'}`}
-              >
-                <ArrowUpDown className="w-4 h-4" />
-              </Button>
+
+            {/* Bottom Row: Full-width Segmented Patient Type Filter Pills */}
+            <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted/80 border border-border">
+              {(
+                [
+                  { id: 'ALL', label: 'All Cases', count: patients.length },
+                  { id: 'INPATIENT', label: 'In-Patient', count: inPatientsCount },
+                  { id: 'OUTPATIENT', label: 'Out-Patient', count: outPatientsCount },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setTypeFilter(tab.id);
+                    setCurrentPage(1);
+                  }}
+                  className={`py-2 px-2 sm:px-3 rounded-lg text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
+                    typeFilter === tab.id
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <span className="truncate">{tab.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold shrink-0 ${
+                      typeFilter === tab.id
+                        ? 'bg-primary/15 text-primary'
+                        : 'bg-muted-foreground/15 text-muted-foreground'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
             </div>
           </Card>
         </motion.div>
@@ -337,32 +416,36 @@ export default function DoctorPatientsClient() {
                       <div>
                         <CardHeader className="flex flex-row items-start justify-between pb-3 gap-3">
                           <div className="flex items-start gap-3 min-w-0 flex-1">
-                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm">
+                            <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 shadow-sm mt-0.5">
                               <User className="w-5 h-5" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <CardTitle className="text-base sm:text-lg font-bold text-heading">
-                                {patient.PAT_FNAME} {patient.PAT_LNAME}
-                              </CardTitle>
-                              <div className="text-xs text-muted mt-1.5 flex flex-wrap items-center gap-2">
-                                <span className="table-id-link font-mono font-bold whitespace-nowrap">{patient.PAT_NUMBER}</span>
-                                <span className="text-muted-foreground">•</span>
-                                <span className="text-heading font-semibold whitespace-nowrap">{patient.PAT_TYPE || 'OutPatient'}</span>
-                                <span className="text-muted-foreground">•</span>
-                                <StatusBadge status={patient.PAT_DISCHARGE_STATUS || 'Admitted'} showIcon />
+                              {/* Line 1: Patient Name on left, Edit Button on right */}
+                              <div className="flex items-start justify-between gap-2">
+                                <CardTitle className="text-base sm:text-lg font-bold text-heading truncate">
+                                  {patient.PAT_FNAME} {patient.PAT_LNAME}
+                                </CardTitle>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => handleEdit(patient)}
+                                  className="table-action-edit hover-lift cursor-pointer h-8 w-8 shrink-0 -mt-1 -mr-1"
+                                  title="Edit Patient Details"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+
+                              {/* Line 2: Patient ID & Type on left, Status Badge on right */}
+                              <div className="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
+                                <div className="text-xs text-muted flex items-center gap-1.5 truncate">
+                                  <span className="table-id-link font-mono font-bold whitespace-nowrap">{patient.PAT_NUMBER}</span>
+                                  <span className="text-muted-foreground">•</span>
+                                  <span className="text-heading font-semibold whitespace-nowrap">{patient.PAT_TYPE || 'OutPatient'}</span>
+                                </div>
+                                <StatusBadge status={patient.PAT_DISCHARGE_STATUS || 'Active'} showIcon />
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-center shrink-0">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleEdit(patient)}
-                              className="table-action-edit hover-lift cursor-pointer h-8 w-8 shrink-0"
-                              title="Edit Patient Details"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </Button>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-1 pb-3">
@@ -377,9 +460,9 @@ export default function DoctorPatientsClient() {
                         </CardContent>
                       </div>
                       
-                      <div className="px-6 py-3 bg-muted/20 dark:bg-muted/10 border-t border-border flex items-center justify-between text-xs text-muted">
+                      <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-muted/20 dark:bg-muted/10 border-t border-border flex items-center justify-between text-xs text-muted gap-2">
                         {patient.PAT_PHONE ? (
-                          <div className="flex items-center gap-1.5 text-heading font-medium">
+                          <div className="flex items-center gap-1.5 text-heading font-medium truncate">
                             <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
                             <span className="truncate">{patient.PAT_PHONE}</span>
                           </div>
@@ -387,7 +470,7 @@ export default function DoctorPatientsClient() {
                           <span className="text-muted text-[11px]">No phone on file</span>
                         )}
                         {patient.PAT_EMAIL && (
-                          <div className="flex items-center gap-1.5 text-muted truncate max-w-[160px] sm:max-w-[200px]" title={patient.PAT_EMAIL}>
+                          <div className="flex items-center gap-1.5 text-muted truncate shrink-0 max-w-[50%]" title={patient.PAT_EMAIL}>
                             <Mail className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{patient.PAT_EMAIL}</span>
                           </div>
@@ -420,6 +503,18 @@ export default function DoctorPatientsClient() {
         onSuccess={handleFormSuccess}
         patient={selectedPatient}
         doctorNumber={doctor?.DOC_NUMBER || ''}
+      />
+
+      <ConfirmModal
+        isOpen={confirmExportOpen}
+        onClose={() => setConfirmExportOpen(false)}
+        onConfirm={executeExportCSV}
+        title="Export Assigned Patients"
+        description={`Do you want to download a CSV export containing ${sortedAndFilteredPatients.length} patient record${sortedAndFilteredPatients.length === 1 ? '' : 's'} based on your current filters and search query?`}
+        confirmText="Download CSV"
+        cancelText="Cancel"
+        variant="primary"
+        icon="download"
       />
     </>
   );

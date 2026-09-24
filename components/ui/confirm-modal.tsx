@@ -1,6 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Loader2, X, Trash2, LogOut } from 'lucide-react';
+import { AlertTriangle, Loader2, X, Trash2, LogOut, Download } from 'lucide-react';
 import { Button } from './button';
 
 interface ConfirmModalProps {
@@ -13,7 +13,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'primary';
   isLoading?: boolean;
-  icon?: 'trash' | 'logout' | 'alert';
+  icon?: 'trash' | 'logout' | 'alert' | 'download';
 }
 
 export function ConfirmModal({
@@ -30,7 +30,7 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 
-  const IconComponent = icon === 'logout' ? LogOut : icon === 'alert' ? AlertTriangle : Trash2;
+  const IconComponent = icon === 'logout' ? LogOut : icon === 'alert' ? AlertTriangle : icon === 'download' ? Download : Trash2;
 
   const iconBg =
     variant === 'danger'

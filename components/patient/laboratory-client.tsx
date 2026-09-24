@@ -162,26 +162,29 @@ export default function PatientLaboratoryClient({ labs }: LaboratoryClientProps)
                 <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md">
                   <div className="card-accent-bar" />
                   <CardHeader className="pb-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                          <FlaskConical className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl font-bold text-heading">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 mt-0.5">
+                        <FlaskConical className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Line 1: Lab Title and Date */}
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-base sm:text-lg font-bold text-heading">
                             Lab #{lab.LAB_NUMBER}
                           </CardTitle>
-                          <p className="text-xs text-muted mt-0.5">
-                            Diagnosis / Indication: <span className="text-foreground font-medium">{lab.LAB_PAT_AILMENT || 'Clinical Pathology'}</span>
-                          </p>
+                          <div className="flex items-center gap-1.5 text-xs text-muted font-semibold shrink-0 pt-0.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            <span>{formatDate(lab.LAB_DATE_REC)}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={lab.LAB_STATUS || 'Completed'} showIcon />
-                        <span className="text-xs text-muted font-medium flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-primary" />
-                          {formatDate(lab.LAB_DATE_REC)}
-                        </span>
+
+                        {/* Line 2: Indication on left, Status Tag on right */}
+                        <div className="flex items-center justify-between gap-2 mt-1.5">
+                          <p className="text-xs text-muted truncate min-w-0">
+                            Indication: <span className="text-foreground font-medium">{lab.LAB_PAT_AILMENT || 'Clinical Pathology'}</span>
+                          </p>
+                          <StatusBadge status={lab.LAB_STATUS || 'Completed'} showIcon />
+                        </div>
                       </div>
                     </div>
                   </CardHeader>

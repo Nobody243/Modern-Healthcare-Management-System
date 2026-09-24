@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Calendar, Thermometer, HeartPulse, Wind, User, Search, ShieldCheck } from 'lucide-react';
+import { Activity, Calendar, Thermometer, HeartPulse, Wind, Search, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/utils';
@@ -205,12 +205,6 @@ export default function PatientVitalsClient({ vitals }: VitalsClientProps) {
                                 {bpEval.label}
                               </span>
                             </div>
-                            {vital.VIT_RECORDED_BY && (
-                              <p className="text-xs text-muted font-semibold mt-0.5 flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5 text-primary" />
-                                <span>Recorded by: <span className="font-bold text-heading">{vital.VIT_RECORDED_BY}</span></span>
-                              </p>
-                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted font-semibold">

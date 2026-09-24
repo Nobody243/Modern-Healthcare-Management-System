@@ -143,53 +143,53 @@ export default function DashboardClient({ stats, doctorName }: DashboardClientPr
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-card border border-border p-6 sm:p-8 shadow-2xl card-accent"
+        className="relative overflow-hidden rounded-2xl bg-card border border-border p-4 sm:p-6 lg:p-8 shadow-2xl card-accent"
       >
         <div className="card-accent-bar absolute top-0 left-0 right-0" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex items-center gap-4">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <motion.div 
-              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl kpi-icon-success flex items-center justify-center border shrink-0"
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl kpi-icon-success flex items-center justify-center border shrink-0"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              <Activity className="w-7 h-7 sm:w-8 sm:h-8" />
+              <Activity className="w-6 h-6 sm:w-8 sm:h-8" />
             </motion.div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-foreground flex items-center gap-3">
+              <h1 className="text-xl sm:text-3xl font-black text-foreground flex items-center gap-3">
                 Doctor Portal
               </h1>
-              <p className="text-muted-foreground mt-0.5 text-sm sm:text-base font-medium">
+              <p className="text-muted-foreground mt-0.5 text-xs sm:text-base font-medium">
                 Welcome back, Dr. {doctorName.split(' ').pop()}
               </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Timeframe Filter Pill */}
-            <div className="flex items-center p-1 rounded-xl bg-muted/80 border border-border">
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
+            {/* Timeframe Filter Pill - fills remaining space on mobile evenly with no dead space */}
+            <div className="flex-1 sm:flex-initial grid grid-cols-4 sm:flex items-center p-0.5 sm:p-1 rounded-xl bg-muted/80 border border-border">
               {(['7D', '30D', 'Quarter', 'All'] as TimeframeOption[]).map((tf) => (
                 <button
                   key={tf}
                   type="button"
                   onClick={() => setTimeframe(tf)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-1.5 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                     timeframe === tf
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {tf === 'All' ? 'All Time' : tf}
+                  {tf === 'All' ? 'All' : tf === 'Quarter' ? <><span className="sm:hidden">Qtr</span><span className="hidden sm:inline">Quarter</span></> : tf}
                 </button>
               ))}
             </div>
 
-            {/* Live Sync Action Button */}
+            {/* Live Sync Action Button - stays on right of the same line */}
             <button
               type="button"
               onClick={handleLiveSync}
               disabled={isSyncing}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-card hover:bg-muted/60 border border-border text-xs font-bold text-foreground transition-all cursor-pointer shadow-sm"
+              className="shrink-0 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-card hover:bg-muted/60 border border-border text-[11px] sm:text-xs font-bold text-foreground transition-all cursor-pointer shadow-sm"
               title="Click to sync live data"
             >
               <span className="relative flex h-2 w-2 items-center justify-center">
@@ -200,7 +200,7 @@ export default function DashboardClient({ stats, doctorName }: DashboardClientPr
               <RefreshCw className={`w-3.5 h-3.5 text-primary ${isSyncing ? 'animate-spin' : ''}`} />
             </button>
 
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground shrink-0">
               <Clock className="w-3.5 h-3.5 text-primary" />
               <span className="tabular-nums">
                 {mounted && time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}

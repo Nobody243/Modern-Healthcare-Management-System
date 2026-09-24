@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { exportToCSV } from '@/lib/export-csv';
 import { SortableHeader, SortOrder } from '@/components/ui/sortable-header';
 import { TablePagination } from '@/components/ui/table-pagination';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 interface Patient {
   PAT_ID: number;
@@ -34,6 +35,7 @@ export default function PatientsClient() {
   const [detailPatient, setDetailPatient] = useState<Patient | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
+  const [confirmExportOpen, setConfirmExportOpen] = useState(false);
   const [sortKey, setSortKey] = useState<string>('PAT_NUMBER');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -136,6 +138,14 @@ export default function PatientsClient() {
   }, [sortedAndFilteredPatients, currentPage, pageSize]);
 
   const handleExportCSV = () => {
+    if (sortedAndFilteredPatients.length === 0) {
+      toast.error('No patient records available to export');
+      return;
+    }
+    setConfirmExportOpen(true);
+  };
+
+  const executeExportCSV = () => {
     exportToCSV(
       `Patients_Registry_${new Date().toISOString().split('T')[0]}`,
       sortedAndFilteredPatients,
@@ -150,6 +160,7 @@ export default function PatientsClient() {
         { header: 'Discharge Status', accessor: 'PAT_DISCHARGE_STATUS' },
       ]
     );
+    setConfirmExportOpen(false);
     toast.success(`Exported ${sortedAndFilteredPatients.length} patient records to CSV`);
   };
 
@@ -481,6 +492,18 @@ export default function PatientsClient() {
       </AnimatePresence>
 
       <SafeDeleteDialogs state={safeDelete} />
+
+      <ConfirmModal
+        isOpen={confirmExportOpen}
+        onClose={() => setConfirmExportOpen(false)}
+        onConfirm={executeExportCSV}
+        title="Export Patient Registry"
+        description={`Do you want to download a CSV export containing ${sortedAndFilteredPatients.length} patient record${sortedAndFilteredPatients.length === 1 ? '' : 's'} based on your current filters and search query?`}
+        confirmText="Download CSV"
+        cancelText="Cancel"
+        variant="primary"
+        icon="download"
+      />
     </>
   );
 }

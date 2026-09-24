@@ -177,28 +177,31 @@ export default function PatientRecordsClient({ records }: RecordsClientProps) {
                 <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md">
                   <div className="card-accent-bar" />
                   <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2.5 rounded-xl kpi-icon-primary">
-                          <FileHeart className="w-5 h-5" />
-                        </div>
-                        <div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 mt-0.5">
+                        <FileHeart className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Line 1: Record Number and Date */}
+                        <div className="flex items-start justify-between gap-2">
                           <CardTitle className="text-xl font-bold font-mono text-heading">
                             {record.MDR_NUMBER}
                           </CardTitle>
-                          {record.DOC_NAME && (
-                            <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
-                              <Stethoscope className="w-3 h-3 text-primary" />
+                          <div className="flex items-center gap-1.5 text-xs text-muted font-semibold shrink-0 pt-0.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            <span>{formatDate(record.MDR_DATE_REC)}</span>
+                          </div>
+                        </div>
+
+                        {/* Line 2: Attending Doctor on left */}
+                        {record.DOC_NAME && (
+                          <div className="flex items-center justify-between gap-2 mt-1.5">
+                            <p className="text-xs text-muted flex items-center gap-1.5 truncate">
+                              <Stethoscope className="w-3.5 h-3.5 text-primary shrink-0" />
                               <span>Attending: <span className="font-medium text-foreground">Dr. {record.DOC_NAME}</span></span>
                             </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="badge-theme-primary">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {formatDate(record.MDR_DATE_REC)}
-                        </Badge>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardHeader>

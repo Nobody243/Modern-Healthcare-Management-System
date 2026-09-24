@@ -161,21 +161,21 @@ export default function AdminDashboardClient({ stats, userName }: AdminDashboard
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
           {/* Timeframe Selector Pill */}
-          <div className="flex items-center p-1 rounded-xl bg-muted/80 border border-border">
+          <div className="flex-1 sm:flex-initial grid grid-cols-4 sm:flex items-center p-0.5 sm:p-1 rounded-xl bg-muted/80 border border-border">
             {(['7D', '30D', 'Quarter', 'All'] as TimeframeOption[]).map((tf) => (
               <button
                 key={tf}
                 type="button"
                 onClick={() => setTimeframe(tf)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-1.5 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer text-center whitespace-nowrap ${
                   timeframe === tf
                     ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {tf === 'All' ? 'All Time' : tf}
+                {tf === 'All' ? 'All' : tf === 'Quarter' ? <><span className="sm:hidden">Qtr</span><span className="hidden sm:inline">Quarter</span></> : tf}
               </button>
             ))}
           </div>
@@ -185,7 +185,7 @@ export default function AdminDashboardClient({ stats, userName }: AdminDashboard
             type="button"
             onClick={handleLiveSync}
             disabled={isSyncing}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-card hover:bg-muted/60 border border-border text-xs font-bold text-foreground transition-all cursor-pointer shadow-sm"
+            className="shrink-0 flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-card hover:bg-muted/60 border border-border text-[11px] sm:text-xs font-bold text-foreground transition-all cursor-pointer shadow-sm"
             title="Click to sync live data"
           >
             <span className="relative flex h-2 w-2 items-center justify-center">

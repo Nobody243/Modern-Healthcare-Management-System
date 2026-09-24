@@ -13,12 +13,14 @@ import { fetchWithCache, invalidateApiCache } from '@/lib/api-cache';
 import { exportToCSV } from '@/lib/export-csv';
 import { SortableHeader, SortOrder } from '@/components/ui/sortable-header';
 import { TablePagination } from '@/components/ui/table-pagination';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function PharmaceuticalsClient() {
   const [pharmaceuticals, setPharmaceuticals] = useState<Pharmaceutical[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [formOpen, setFormOpen] = useState(false);
+  const [confirmExportOpen, setConfirmExportOpen] = useState(false);
   const [selectedPharmaceutical, setSelectedPharmaceutical] = useState<Pharmaceutical | undefined>();
   const [sortKey, setSortKey] = useState<string>('PHAR_NAME');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -114,6 +116,14 @@ export default function PharmaceuticalsClient() {
   }, [sortedAndFilteredPharmaceuticals, currentPage, pageSize]);
 
   const handleExportCSV = () => {
+    if (sortedAndFilteredPharmaceuticals.length === 0) {
+      toast.error('No pharmaceutical records available to export');
+      return;
+    }
+    setConfirmExportOpen(true);
+  };
+
+  const executeExportCSV = () => {
     exportToCSV(
       `Pharmaceuticals_Inventory_${new Date().toISOString().split('T')[0]}`,
       sortedAndFilteredPharmaceuticals,
@@ -126,6 +136,7 @@ export default function PharmaceuticalsClient() {
         { header: 'Description', accessor: 'PHAR_DESC' },
       ]
     );
+    setConfirmExportOpen(false);
     toast.success(`Exported ${sortedAndFilteredPharmaceuticals.length} pharmaceutical records to CSV`);
   };
 
@@ -438,6 +449,18 @@ export default function PharmaceuticalsClient() {
       />
 
       <SafeDeleteDialogs state={safeDelete} />
+
+      <ConfirmModal
+        isOpen={confirmExportOpen}
+        onClose={() => setConfirmExportOpen(false)}
+        onConfirm={executeExportCSV}
+        title="Export Pharmaceutical Inventory"
+        description={`Do you want to download a CSV export containing ${sortedAndFilteredPharmaceuticals.length} drug record${sortedAndFilteredPharmaceuticals.length === 1 ? '' : 's'} based on your current filters and search query?`}
+        confirmText="Download CSV"
+        cancelText="Cancel"
+        variant="primary"
+        icon="download"
+      />
     </>
   );
 }

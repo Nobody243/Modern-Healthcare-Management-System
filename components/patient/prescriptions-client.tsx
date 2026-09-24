@@ -165,31 +165,34 @@ export default function PatientPrescriptionsClient({ prescriptions }: Prescripti
                 <Card className="card overflow-hidden border border-border hover:border-muted-foreground/30 transition-all shadow-md">
                   <div className="card-accent-bar" />
                   <CardHeader className="pb-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0">
-                          <Pill className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl font-bold text-heading">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl kpi-icon-primary shrink-0 mt-0.5">
+                        <Pill className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Line 1: Medication Name and Date */}
+                        <div className="flex items-start justify-between gap-2">
+                          <CardTitle className="text-base sm:text-lg font-bold text-heading">
                             {prescription.PRES_MEDICATION}
                           </CardTitle>
-                          <p className="text-xs text-muted mt-0.5 flex items-center gap-2">
-                            <span className="table-id-link">Rx #{prescription.PRES_NUMBER}</span>
+                          <div className="flex items-center gap-1.5 text-xs text-muted font-semibold shrink-0 pt-0.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            <span>{formatDate(prescription.PRES_DATE)}</span>
+                          </div>
+                        </div>
+
+                        {/* Line 2: Rx Number / Doctor on left, Status Tag on right */}
+                        <div className="flex items-center justify-between gap-2 mt-1.5">
+                          <p className="text-xs text-muted flex items-center gap-2 flex-wrap min-w-0">
+                            <span className="table-id-link font-mono font-bold">Rx #{prescription.PRES_NUMBER}</span>
                             <span>•</span>
-                            <span className="flex items-center gap-1 text-foreground">
-                              <Stethoscope className="w-3 h-3 text-primary" />
+                            <span className="flex items-center gap-1 text-foreground truncate">
+                              <Stethoscope className="w-3 h-3 text-primary shrink-0" />
                               {prescription.PRES_DOC_NAME || 'Attending Physician'}
                             </span>
                           </p>
+                          <StatusBadge status={prescription.PRES_STATUS || 'Active'} showIcon />
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={prescription.PRES_STATUS || 'Active'} showIcon />
-                        <span className="text-xs text-muted font-medium flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-primary" />
-                          {formatDate(prescription.PRES_DATE)}
-                        </span>
                       </div>
                     </div>
                   </CardHeader>
