@@ -33,7 +33,7 @@ import { Spotlight } from '@/components/ui/spotlight';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 // ============================================================================
-// ORIGINAL DYNAMIC CURSOR BLOB (DESKTOP / FINE-POINTER ONLY)
+// ORIGINAL DYNAMIC CURSOR BLOB (DESKTOP ONLY — ZERO TOUCH / MOBILE / TABLET)
 // ============================================================================
 function CursorGlow() {
   const [isDesktopFinePointer, setIsDesktopFinePointer] = useState(false);
@@ -45,23 +45,35 @@ function CursorGlow() {
   const blobScale = useMotionValue(1);
 
   // Smooth fluid spring physics for natural liquid movement
-  const springConfig = { damping: 28, stiffness: 220, mass: 0.15 };
+  const springConfig = { damping: 24, stiffness: 300, mass: 0.1 };
   const smoothX = useSpring(cursorX, springConfig);
   const smoothY = useSpring(cursorY, springConfig);
-  const smoothScale = useSpring(blobScale, { damping: 22, stiffness: 300 });
+  const smoothScale = useSpring(blobScale, { damping: 20, stiffness: 320 });
 
   useEffect(() => {
-    // Strictly verify desktop viewport + fine pointer (mouse/trackpad with hover capability)
-    const media = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
-    setIsDesktopFinePointer(media.matches);
-
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      setIsDesktopFinePointer(e.matches);
+    // Strictly verify desktop viewport (>= 1024px) + fine pointer (mouse/trackpad with hover capability)
+    const checkIsDesktop = () => {
+      const isFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const isLargeScreen = window.innerWidth >= 1024;
+      return isFine && isLargeScreen;
     };
 
-    media.addEventListener('change', handleMediaChange);
+    setIsDesktopFinePointer(checkIsDesktop());
 
-    if (!media.matches) return () => media.removeEventListener('change', handleMediaChange);
+    const handleResizeOrMedia = () => {
+      setIsDesktopFinePointer(checkIsDesktop());
+    };
+
+    const media = window.matchMedia('(hover: hover) and (pointer: fine)');
+    media.addEventListener('change', handleResizeOrMedia);
+    window.addEventListener('resize', handleResizeOrMedia, { passive: true });
+
+    if (!checkIsDesktop()) {
+      return () => {
+        media.removeEventListener('change', handleResizeOrMedia);
+        window.removeEventListener('resize', handleResizeOrMedia);
+      };
+    }
 
     let isHoveringInteractive = false;
 
@@ -78,7 +90,7 @@ function CursorGlow() {
 
       if (interactiveEl && !isHoveringInteractive) {
         isHoveringInteractive = true;
-        blobScale.set(1.3);
+        blobScale.set(1.35);
       } else if (!interactiveEl && isHoveringInteractive) {
         isHoveringInteractive = false;
         blobScale.set(1);
@@ -90,7 +102,7 @@ function CursorGlow() {
     };
 
     const handleMouseUp = () => {
-      blobScale.set(isHoveringInteractive ? 1.3 : 1);
+      blobScale.set(isHoveringInteractive ? 1.35 : 1);
     };
 
     const handleMouseLeave = () => {
@@ -108,7 +120,8 @@ function CursorGlow() {
     document.addEventListener('mouseenter', handleMouseEnter);
 
     return () => {
-      media.removeEventListener('change', handleMediaChange);
+      media.removeEventListener('change', handleResizeOrMedia);
+      window.removeEventListener('resize', handleResizeOrMedia);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -124,7 +137,7 @@ function CursorGlow() {
       className="hidden lg:block pointer-events-none select-none fixed inset-0 z-30 overflow-hidden"
       aria-hidden="true"
     >
-      {/* Primary Fluid Ambient Glow Blob */}
+      {/* 1. Primary Luminous Ambient Beam Follower */}
       <motion.div
         style={{
           x: smoothX,
@@ -134,12 +147,12 @@ function CursorGlow() {
           opacity,
           scale: smoothScale,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.16) 0%, rgba(59, 130, 246, 0.05) 45%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.22) 0%, rgba(59, 130, 246, 0.08) 45%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 w-[420px] h-[420px] rounded-full blur-3xl transform-gpu will-change-transform"
+        className="fixed top-0 left-0 w-[480px] h-[480px] rounded-full blur-3xl transform-gpu will-change-transform"
       />
 
-      {/* Focused Radiant Core Energy Blob */}
+      {/* 2. Magnetic Core Micro Beacon */}
       <motion.div
         style={{
           x: smoothX,
@@ -149,9 +162,9 @@ function CursorGlow() {
           opacity,
           scale: smoothScale,
           background:
-            'radial-gradient(circle, rgba(34, 211, 238, 0.30) 0%, rgba(13, 148, 136, 0.10) 40%, transparent 70%)',
+            'radial-gradient(circle, rgba(34, 211, 238, 0.45) 0%, rgba(34, 211, 238, 0.12) 40%, transparent 70%)',
         }}
-        className="fixed top-0 left-0 w-[140px] h-[140px] rounded-full blur-xl transform-gpu will-change-transform"
+        className="fixed top-0 left-0 w-[160px] h-[160px] rounded-full blur-xl transform-gpu will-change-transform"
       />
     </div>
   );
@@ -168,33 +181,42 @@ function SpotlightCard({
   className?: string;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [canHover, setCanHover] = useState(false);
+  const [isDesktopHover, setIsDesktopHover] = useState(false);
 
   useEffect(() => {
-    // Only enable mouse hover listener on desktop devices with hover support
-    setCanHover(window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)').matches);
+    const check = () => {
+      setIsDesktopHover(
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches && window.innerWidth >= 1024
+      );
+    };
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current || !canHover) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-    cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-  }, [canHover]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!cardRef.current || !isDesktopHover) return;
+      const rect = cardRef.current.getBoundingClientRect();
+      cardRef.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      cardRef.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    },
+    [isDesktopHover]
+  );
 
   return (
     <div
       ref={cardRef}
-      onMouseMove={canHover ? handleMouseMove : undefined}
+      onMouseMove={isDesktopHover ? handleMouseMove : undefined}
       className={`group relative overflow-hidden rounded-2xl bg-card border border-border/90 dark:border-slate-700/90 shadow-md transition-all duration-300 hover:border-primary/50 hover:shadow-xl lg:hover:-translate-y-1 transform-gpu will-change-transform ${className}`}
     >
       {/* Spotlight Beam (Desktop Only - completely disabled on mobile/tablet to avoid click blobs) */}
-      {canHover && (
+      {isDesktopHover && (
         <div
           className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform-gpu hidden lg:block"
           style={{
             background:
-              'radial-gradient(360px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.16), transparent 70%)',
+              'radial-gradient(400px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), rgba(34, 211, 238, 0.20), transparent 70%)',
           }}
         />
       )}
